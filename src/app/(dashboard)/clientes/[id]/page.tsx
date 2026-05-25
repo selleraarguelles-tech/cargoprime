@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import ClienteForm from '../ClienteForm'
+import CopiarEnlaceButton from './CopiarEnlaceButton'
 import Link from 'next/link'
 import Badge from '@/components/Badge'
 import { ESTADOS_PEDIDO, formatDate } from '@/lib/utils'
@@ -35,9 +36,12 @@ export default async function EditarClientePage({ params }: Props) {
         </Link>
       </div>
 
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">{cliente.nombre}</h1>
-        <p className="text-gray-500 text-sm mt-1">Cliente desde {formatDate(cliente.createdAt)}</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{cliente.nombre}</h1>
+          <p className="text-gray-500 text-sm mt-1">Cliente desde {formatDate(cliente.createdAt)}</p>
+        </div>
+        <CopiarEnlaceButton clienteId={cliente.id} />
       </div>
 
       <ClienteForm cliente={cliente} />

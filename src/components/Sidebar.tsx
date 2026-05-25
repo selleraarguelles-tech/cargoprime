@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Eye,
   ShoppingBag,
+  Truck,
 } from 'lucide-react'
 
 interface SidebarUser {
@@ -34,6 +35,7 @@ const navItems = [
   { href: '/pedidos', label: 'Pedidos', icon: ShoppingCart },
   { href: '/inventario', label: 'Inventario', icon: Package },
   { href: '/etiquetas', label: 'Etiquetas', icon: Tag },
+  { href: '/envios', label: 'Envíos entrantes', icon: Truck },
   { href: '/clientes', label: 'Clientes', icon: Users },
 ]
 

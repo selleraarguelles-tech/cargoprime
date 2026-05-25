@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Cliente {
+  id             Int            @id @default(autoincrement())
+  nombre         String
+  email          String         @unique
+  telefono       String?
+  createdAt      DateTime       @default(now())
+  productos      Producto[]
+  pedidos        Pedido[]
+  cuentasAmazon  CuentaAmazon[]
+}
+
+model CuentaAmazon {
+  id            Int       @id @default(autoincrement())
+  nombre        String
+  sellerId      String    @unique
+  marketplaceId String    @default("A1RKKUPIHCS9HS")
+  clienteId     Int
+  refreshToken  String
+  isSandbox     Boolean   @default(false)
+  activo        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  cliente       Cliente   @relation(fields: [clienteId], references: [id])
+}
+
+model Producto {
+  id           Int               @id @default(autoincrement())
+  sku          String            @unique
+  nombre       String
+  clienteId    Int
+  stockActual  Int               @default(0)
+  stockMinimo  Int               @default(5)
+  createdAt    DateTime          @default(now())
+  cliente      Cliente           @relation(fields: [clienteId], references: [id])
+  pedidos      Pedido[]
+  movimientos  MovimientoStock[]
+}
+
+model Pedido {
+  id                    Int      @id @default(autoincrement())
+  amazonOrderId         String   @unique
+  clienteId             Int
+  productoId            Int
+  destinatarioNombre    String
+  destinatarioDireccion String
+  destinatarioCP        String
+  destinatarioCiudad    String
+  destinatarioPais      String   @default("España")
+  peso                  Float?
+  transportista         String?
+  trackingNumber        String?
+  estado                String   @default("sin_etiqueta")
+  createdAt             DateTime @default(now())
+  cliente               Cliente  @relation(fields: [clienteId], references: [id])
+  producto              Producto @relation(fields: [productoId], references: [id])
+}
+
+model MovimientoStock {
+  id         Int      @id @default(autoincrement())
+  productoId Int
+  tipo       String
+  cantidad   Int
+  nota       String?
+  createdAt  DateTime @default(now())
+  producto   Producto @relation(fields: [productoId], references: [id])
+}
+
+model Configuracion {
+  clave String @id
+  valor String
+}
+
+model User {
+  id               Int       @id @default(autoincrement())
+  username         String    @unique
+  email            String    @unique
+  password         String
+  nombre           String
+  rol              String    @default("readonly")
+  activo           Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+}

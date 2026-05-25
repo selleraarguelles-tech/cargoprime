@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(export PATH=\"$PATH:/c/Program Files/nodejs:/c/Users/Prueba/AppData/Roaming/npm\")",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(node -e \"const m = require\\('@prisma/adapter-better-sqlite3'\\); console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(npx prisma *)",
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('base64'\\)\\)\")",
+      "Bash(cp -r /c/proyecto-almacen-fba/src/app/pedidos \"/c/proyecto-almacen-fba/src/app/\\(dashboard\\)/\")",
+      "Bash(cp -r /c/proyecto-almacen-fba/src/app/inventario \"/c/proyecto-almacen-fba/src/app/\\(dashboard\\)/\")",
+      "Bash(cp -r /c/proyecto-almacen-fba/src/app/etiquetas \"/c/proyecto-almacen-fba/src/app/\\(dashboard\\)/\")",
+      "Bash(cp -r /c/proyecto-almacen-fba/src/app/clientes \"/c/proyecto-almacen-fba/src/app/\\(dashboard\\)/\")",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/login)",
+      "Bash(python3 -c \"import sys,json; [print\\(json.loads\\(l\\).get\\('message',''\\)[:120]\\) for l in sys.stdin if 'ERROR' in l]\")",
+      "Bash(npx tsx *)",
+      "Bash(node -e \"const p = require\\('./node_modules/next-auth/package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(xargs grep *)",
+      "Bash(xargs cat *)",
+      "Bash(node -e \"const p = require\\('/c/proyecto-almacen-fba/node_modules/next/package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(npx next *)",
+      "Bash(curl -s -X POST http://localhost:3001/api/debug-auth -H 'Content-Type: application/json' -d '{\"email\":\"aarguelles05@gmail.com\",\"password\":\"admin\"}')",
+      "Bash(taskkill /PID 9536 /F)",
+      "Bash(cmd.exe /c \"taskkill /PID 9536 /F\")",
+      "Bash(export PATH=\"$PATH:/c/Program Files/nodejs:/c/Users/Prueba/AppData/Roaming/npm:/c/Windows/System32\")",
+      "Bash(kill -9 9536)",
+      "Bash(npx kill-port *)",
+      "Bash(export PATH=\"$PATH:/c/Windows/System32:/c/Windows/System32/WindowsPowerShell/v1.0:/c/Program Files/nodejs:/c/Users/Prueba/AppData/Roaming/npm\")",
+      "Bash(powershell.exe -Command \"Get-NetTCPConnection -LocalPort 3000 -State Listen | Select-Object OwningProcess\")",
+      "Bash(powershell.exe -Command \"Stop-Process -Id 9536 -Force; Write-Host 'Killed PID 9536'\")",
+      "WebFetch(domain:developer-docs.amazon.com)"
+    ]
+  }
+}

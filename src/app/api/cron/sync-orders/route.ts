@@ -3,6 +3,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { getAmazonConfig } from '@/lib/config'
 import { getAccessToken, getRecentUnshippedOrders, getOrderItems, getOrderAddress } from '@/lib/spapi'
+import { syncStockForCuenta } from '@/lib/syncStock'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
@@ -96,6 +97,7 @@ export async function GET(req: NextRequest) {
           allErrors.push(`${order.AmazonOrderId}: ${msg}`)
         }
       }
+      await syncStockForCuenta(accessToken, cuenta.sellerId, cuenta.marketplaceId, cuenta.clienteId, cuenta.isSandbox)
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
       allErrors.push(`Cuenta ${cuenta.id}: ${msg}`)

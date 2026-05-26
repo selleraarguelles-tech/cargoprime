@@ -221,6 +221,29 @@ export async function getOrderAddress(
   }
 }
 
+export async function getListingStock(
+  accessToken: string,
+  sellerId: string,
+  marketplaceId: string,
+  sku: string,
+  sandbox = false
+): Promise<number> {
+  try {
+    const data = await spCall(
+      accessToken,
+      marketplaceId,
+      `/listings/2021-08-01/items/${encodeURIComponent(sellerId)}/${encodeURIComponent(sku)}`,
+      { marketplaceIds: marketplaceId, includedData: 'fulfillmentAvailability' },
+      sandbox
+    )
+    const availability: Array<{ fulfillmentChannelCode: string; quantity: number }> = data.fulfillmentAvailability ?? []
+    const merchant = availability.find(a => a.fulfillmentChannelCode === 'DEFAULT')
+    return merchant?.quantity ?? 0
+  } catch {
+    return -1
+  }
+}
+
 export async function getMFNLabel(
   accessToken: string,
   marketplaceId: string,

@@ -3,6 +3,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { getAmazonConfig } from '@/lib/config'
 import { getAccessToken, getOrders, getOrderItems, getOrderAddress } from '@/lib/spapi'
+import { syncStockForCuenta } from '@/lib/syncStock'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
@@ -95,6 +96,8 @@ export async function POST(req: NextRequest) {
         errores.push(`${order.AmazonOrderId}: ${msg}`)
       }
     }
+
+    await syncStockForCuenta(accessToken, cuenta.sellerId, cuenta.marketplaceId, cuenta.clienteId, cuenta.isSandbox)
 
     return NextResponse.json({ ok: true, totalAmazon: orders.length, creados, omitidos, errores: errores.slice(0, 10) })
   } catch (err: unknown) {

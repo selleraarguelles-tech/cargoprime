@@ -89,6 +89,10 @@ export async function getAccessToken(
   return data.access_token as string
 }
 
+async function sleep(ms: number) {
+  return new Promise(r => setTimeout(r, ms))
+}
+
 async function spCall(
   accessToken: string,
   marketplaceId: string,
@@ -100,14 +104,24 @@ async function spCall(
   const url = new URL(`${base}${path}`)
   if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
 
-  const res = await fetch(url.toString(), {
-    headers: { 'x-amz-access-token': accessToken, 'Content-Type': 'application/json' },
-  })
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`SP-API ${path} (${res.status}): ${err}`)
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const res = await fetch(url.toString(), {
+      headers: { 'x-amz-access-token': accessToken, 'Content-Type': 'application/json' },
+    })
+    if (res.status === 429) {
+      // Respect Retry-After header or use exponential backoff (2s, 4s, 8s)
+      const retryAfter = res.headers.get('Retry-After')
+      const wait = retryAfter ? parseFloat(retryAfter) * 1000 : 2000 * Math.pow(2, attempt)
+      await sleep(wait)
+      continue
+    }
+    if (!res.ok) {
+      const err = await res.text()
+      throw new Error(`SP-API ${path} (${res.status}): ${err}`)
+    }
+    return res.json()
   }
-  return res.json()
+  throw new Error(`SP-API ${path}: quota excedida tras varios reintentos`)
 }
 
 export interface AmazonOrder {

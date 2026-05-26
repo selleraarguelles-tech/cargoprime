@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { getAmazonConfig } from '@/lib/config'
 import { getAccessToken, getOrders, getOrderItems, getOrderAddress } from '@/lib/spapi'
 
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
+
 export async function POST(req: NextRequest) {
   const session = await auth()
   if (session?.user?.role !== 'admin') {
@@ -43,6 +45,7 @@ export async function POST(req: NextRequest) {
       if (exists) { omitidos++; continue }
 
       try {
+        await sleep(300) // SP-API orderItems rate limit: 0.5 req/s burst 30
         const items = await getOrderItems(accessToken, cuenta.marketplaceId, order.AmazonOrderId, sandbox)
         const firstItem = items[0]
         if (!firstItem) { omitidos++; continue }

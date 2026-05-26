@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { getAmazonConfig } from '@/lib/config'
 import { getAccessToken, getRecentUnshippedOrders, getOrderItems, getOrderAddress } from '@/lib/spapi'
@@ -9,8 +10,11 @@ export const maxDuration = 300
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const isCron = process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`
+
+  if (!isCron) {
+    const session = await auth()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const cfg = await getAmazonConfig()

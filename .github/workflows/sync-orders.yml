@@ -1,0 +1,23 @@
+name: Sync Amazon Orders
+
+on:
+  schedule:
+    # Cada 30 min en horario laboral (7:00-19:00 UTC = 9:00-21:00 Madrid verano)
+    - cron: '*/30 7-19 * * 1-5'
+    # Arranque garantizado 8:30 Madrid (6:30 UTC en verano CEST)
+    - cron: '30 6 * * 1-5'
+    # Sincronización de mediodía 13:30 Madrid (11:30 UTC en verano CEST)
+    - cron: '30 11 * * 1-5'
+  workflow_dispatch: # permite lanzarlo manualmente desde GitHub
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Sync new Amazon orders
+        run: |
+          curl -sf -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/sync-orders" \
+            && echo "Sync OK" || echo "Sync failed"

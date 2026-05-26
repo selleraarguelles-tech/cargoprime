@@ -147,15 +147,13 @@ export interface AmazonOrderItem {
   QuantityOrdered: number
 }
 
-export async function getOrders(
+async function fetchOrdersFrom(
   accessToken: string,
   marketplaceId: string,
-  daysSince = 30,
-  sandbox = false
+  since: Date,
+  statuses: string,
+  sandbox: boolean
 ): Promise<AmazonOrder[]> {
-  const since = new Date()
-  since.setDate(since.getDate() - daysSince)
-
   const all: AmazonOrder[] = []
   let nextToken: string | undefined
 
@@ -167,7 +165,7 @@ export async function getOrders(
         : {
             MarketplaceIds: marketplaceId,
             FulfillmentChannels: 'MFN',
-            OrderStatuses: 'Unshipped,PartiallyShipped,Shipped',
+            OrderStatuses: statuses,
             MaxResultsPerPage: '50',
             CreatedAfter: since.toISOString(),
           }
@@ -177,6 +175,26 @@ export async function getOrders(
   } while (nextToken)
 
   return all
+}
+
+export async function getOrders(
+  accessToken: string,
+  marketplaceId: string,
+  daysSince = 30,
+  sandbox = false
+): Promise<AmazonOrder[]> {
+  const since = new Date()
+  since.setDate(since.getDate() - daysSince)
+  return fetchOrdersFrom(accessToken, marketplaceId, since, 'Unshipped,PartiallyShipped,Shipped', sandbox)
+}
+
+export async function getRecentUnshippedOrders(
+  accessToken: string,
+  marketplaceId: string,
+  since: Date,
+  sandbox = false
+): Promise<AmazonOrder[]> {
+  return fetchOrdersFrom(accessToken, marketplaceId, since, 'Unshipped,PartiallyShipped', sandbox)
 }
 
 export async function getOrderItems(

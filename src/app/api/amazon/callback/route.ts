@@ -5,8 +5,21 @@ import { getAmazonConfig } from '@/lib/config'
 import { exchangeAuthCode } from '@/lib/spapi'
 
 export async function GET(req: NextRequest) {
+  const { searchParams } = req.nextUrl
+  const code = searchParams.get('spapi_oauth_code')
+  const sellerId = searchParams.get('selling_partner_id')
+  const rawState = searchParams.get('state') ?? ''
+  const errorParam = searchParams.get('error')
+
+  // State can be plain UUID (admin flow) or "nonce|public|clienteId" (public flow)
+  const stateParts = rawState.split('|')
+  const isPublicFlowByState = stateParts.length === 3 && stateParts[1] === 'public'
+  const clienteIdFromState = isPublicFlowByState ? stateParts[2] : null
+  const stateNonce = stateParts[0]
+
   const clienteIdFromCookie = req.cookies.get('amazon_oauth_clienteid')?.value
-  const isPublicFlow = !!clienteIdFromCookie
+  const effectiveClienteId = clienteIdFromCookie ?? clienteIdFromState
+  const isPublicFlow = !!(clienteIdFromCookie || isPublicFlowByState)
 
   if (!isPublicFlow) {
     const session = await auth()
@@ -15,16 +28,10 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const { searchParams } = req.nextUrl
-  const code = searchParams.get('spapi_oauth_code')
-  const sellerId = searchParams.get('selling_partner_id')
-  const state = searchParams.get('state')
-  const errorParam = searchParams.get('error')
-
   function redirectError(msg: string) {
-    if (isPublicFlow && clienteIdFromCookie) {
+    if (isPublicFlow && effectiveClienteId) {
       return NextResponse.redirect(
-        new URL(`/autorizar?c=${clienteIdFromCookie}&error=${encodeURIComponent(msg)}`, req.url)
+        new URL(`/autorizar?c=${effectiveClienteId}&error=${encodeURIComponent(msg)}`, req.url)
       )
     }
     return NextResponse.redirect(
@@ -35,8 +42,14 @@ export async function GET(req: NextRequest) {
   if (errorParam) return redirectError(errorParam)
   if (!code || !sellerId) return redirectError('missing_params')
 
-  const savedState = req.cookies.get('amazon_oauth_state')?.value
-  if (!savedState || savedState !== state) return redirectError('invalid_state')
+  const savedNonce = req.cookies.get('amazon_oauth_state')?.value
+  if (isPublicFlow) {
+    // Validate nonce when cookie is present; if cookies were lost (in-app browser), skip
+    if (savedNonce && stateNonce !== savedNonce) return redirectError('invalid_state')
+  } else {
+    // Admin flow: strict CSRF validation required
+    if (!savedNonce || savedNonce !== rawState) return redirectError('invalid_state')
+  }
 
   const cfg = await getAmazonConfig()
   if (!cfg.isConfigured || !cfg.clientId || !cfg.clientSecret || !cfg.redirectUri) {
@@ -65,12 +78,12 @@ export async function GET(req: NextRequest) {
       return response
     }
 
-    if (isPublicFlow && clienteIdFromCookie) {
+    if (isPublicFlow && effectiveClienteId) {
       await prisma.cuentaAmazon.create({
         data: {
           nombre: sellerId,
           sellerId,
-          clienteId: Number(clienteIdFromCookie),
+          clienteId: Number(effectiveClienteId),
           refreshToken,
           marketplaceId: 'A1RKKUPIHCS9HS',
         },

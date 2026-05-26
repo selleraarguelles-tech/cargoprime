@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Badge from '@/components/Badge'
 import { ESTADOS_PEDIDO, formatDate } from '@/lib/utils'
 import { Tag, Printer } from 'lucide-react'
+import SyncButton from './SyncButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,9 +16,12 @@ export default async function EtiquetasPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Etiquetas</h1>
-        <p className="text-gray-500 text-sm mt-1">Pedidos pendientes de etiquetar o preparar</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Etiquetas</h1>
+          <p className="text-gray-500 text-sm mt-1">Pedidos pendientes de etiquetar o preparar</p>
+        </div>
+        <SyncButton />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

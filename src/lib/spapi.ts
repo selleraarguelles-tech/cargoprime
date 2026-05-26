@@ -244,6 +244,27 @@ export async function getListingStock(
   }
 }
 
+export async function getEasyShipLabel(
+  accessToken: string,
+  marketplaceId: string,
+  amazonOrderId: string,
+  sandbox = false
+): Promise<string | null> {
+  try {
+    const data = await spCall(
+      accessToken,
+      marketplaceId,
+      `/easyShip/2022-03-23/orders/${encodeURIComponent(amazonOrderId)}`,
+      { marketplaceId },
+      sandbox
+    )
+    const details = data.labelDetails as Array<{ labelURL: string }> | undefined
+    return details?.[0]?.labelURL ?? null
+  } catch {
+    return null
+  }
+}
+
 export async function getMFNLabel(
   accessToken: string,
   marketplaceId: string,

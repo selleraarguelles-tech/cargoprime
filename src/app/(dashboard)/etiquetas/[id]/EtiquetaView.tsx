@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Printer, ArrowLeft, CheckCircle } from 'lucide-react'
+import { Download, ArrowLeft, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { formatDate } from '@/lib/utils'
+import Barcode from 'react-barcode'
 
 interface Pedido {
   id: number
@@ -41,14 +41,9 @@ export default function EtiquetaView({ pedido, isAdmin = false }: Props) {
     router.refresh()
   }
 
-  function imprimir() {
-    window.print()
-  }
-
   return (
     <>
-      {/* Barra de acciones — solo en pantalla, no se imprime */}
-      <div className="print:hidden p-6 space-y-4">
+      <div className="p-6 space-y-4">
         <div className="flex items-center gap-4">
           <Link href="/etiquetas" className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
             <ArrowLeft className="w-4 h-4" />
@@ -71,13 +66,15 @@ export default function EtiquetaView({ pedido, isAdmin = false }: Props) {
                 {marcando ? 'Actualizando...' : 'Marcar como preparando'}
               </button>
             )}
-            <button
-              onClick={imprimir}
+            <a
+              href={`/api/pedidos/${pedido.id}/label`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             >
-              <Printer className="w-4 h-4" />
-              Imprimir etiqueta
-            </button>
+              <Download className="w-4 h-4" />
+              Descargar etiqueta Amazon
+            </a>
           </div>
         </div>
 
@@ -86,79 +83,108 @@ export default function EtiquetaView({ pedido, isAdmin = false }: Props) {
         </div>
       </div>
 
-      {/* Solo en impresión */}
-      <div className="hidden print:block">
-        <Etiqueta pedido={pedido} />
-      </div>
     </>
   )
 }
 
 function Etiqueta({ pedido }: Props) {
+  const s: React.CSSProperties = {
+    width: '10.16cm',
+    height: '15.24cm',
+    padding: '0.4cm',
+    display: 'flex',
+    flexDirection: 'column',
+    boxSizing: 'border-box',
+    fontFamily: 'Arial, Helvetica, sans-serif',
+    backgroundColor: 'white',
+    border: '1px solid #000',
+  }
+
   return (
-    <div
-      className="bg-white border-2 border-black font-mono"
-      style={{ width: '10cm', height: '15cm', padding: '0.5cm', display: 'flex', flexDirection: 'column', gap: '0.3cm', boxSizing: 'border-box' }}
-    >
-      {/* Cabecera */}
-      <div style={{ borderBottom: '1.5px solid black', paddingBottom: '0.3cm' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <p style={{ fontSize: '7pt', color: '#666' }}>REMITENTE</p>
-            <p style={{ fontSize: '9pt', fontWeight: 'bold' }}>{pedido.cliente.nombre}</p>
+    <div style={s}>
+
+      {/* CABECERA: logo + vendedor + barcode */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #000', paddingBottom: '0.25cm', marginBottom: '0.2cm' }}>
+        <div>
+          {/* Logo amazon estilo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: '3px' }}>
+            <span style={{ fontSize: '16pt', fontWeight: '900', letterSpacing: '-0.5px', color: '#000' }}>amazon</span>
+            {/* flecha naranja debajo */}
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: '6pt', color: '#666' }}>AMAZON FBM</p>
-            <p style={{ fontSize: '7pt' }}>{formatDate(pedido.createdAt)}</p>
-          </div>
+          <div style={{ width: '70px', height: '3px', background: 'linear-gradient(to right, #FF9900 60%, transparent 100%)', borderRadius: '2px', marginTop: '-2px', marginBottom: '4px' }} />
+          <p style={{ fontSize: '6pt', color: '#444', margin: 0 }}>Vendido por</p>
+          <p style={{ fontSize: '7.5pt', fontWeight: 'bold', margin: 0 }}>{pedido.cliente.nombre}</p>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <Barcode
+            value={pedido.amazonOrderId}
+            format="CODE128"
+            width={1.2}
+            height={35}
+            fontSize={7}
+            margin={0}
+            displayValue={true}
+          />
         </div>
       </div>
 
-      {/* Pedido Amazon */}
-      <div style={{ borderBottom: '1px dashed #999', paddingBottom: '0.25cm' }}>
-        <p style={{ fontSize: '6.5pt', color: '#666', marginBottom: '1px' }}>Nº PEDIDO AMAZON</p>
-        <p style={{ fontSize: '11pt', fontWeight: 'bold', letterSpacing: '0.02cm' }}>{pedido.amazonOrderId}</p>
-      </div>
-
-      {/* Destinatario — sección más grande */}
-      <div style={{ flex: 1, borderBottom: '1.5px solid black', paddingBottom: '0.3cm' }}>
-        <p style={{ fontSize: '6.5pt', color: '#666', marginBottom: '0.15cm' }}>DESTINATARIO</p>
-        <p style={{ fontSize: '13pt', fontWeight: 'bold', lineHeight: 1.2 }}>{pedido.destinatarioNombre}</p>
-        <p style={{ fontSize: '9.5pt', marginTop: '0.2cm', lineHeight: 1.4 }}>{pedido.destinatarioDireccion}</p>
-        <p style={{ fontSize: '11pt', fontWeight: 'bold', marginTop: '0.15cm' }}>
+      {/* DESTINATARIO — sección principal */}
+      <div style={{ flex: 1, borderBottom: '2px solid #000', paddingBottom: '0.2cm', marginBottom: '0.2cm' }}>
+        <p style={{ fontSize: '6.5pt', fontWeight: 'bold', color: '#444', letterSpacing: '0.05cm', marginBottom: '0.15cm' }}>DESTINATARIO</p>
+        <p style={{ fontSize: '14pt', fontWeight: '900', lineHeight: 1.15, margin: '0 0 0.2cm 0' }}>
+          {pedido.destinatarioNombre.toUpperCase()}
+        </p>
+        <p style={{ fontSize: '9.5pt', lineHeight: 1.4, margin: '0 0 0.1cm 0' }}>
+          {pedido.destinatarioDireccion}
+        </p>
+        <p style={{ fontSize: '12pt', fontWeight: 'bold', margin: '0 0 0.05cm 0' }}>
           {pedido.destinatarioCP} {pedido.destinatarioCiudad.toUpperCase()}
         </p>
-        <p style={{ fontSize: '9pt', marginTop: '0.1cm' }}>{pedido.destinatarioPais.toUpperCase()}</p>
+        <p style={{ fontSize: '9pt', margin: 0, color: '#222' }}>
+          {pedido.destinatarioPais.toUpperCase()}
+        </p>
       </div>
 
-      {/* Producto y detalles */}
-      <div style={{ borderBottom: '1px dashed #999', paddingBottom: '0.2cm' }}>
-        <p style={{ fontSize: '6.5pt', color: '#666', marginBottom: '1px' }}>CONTENIDO</p>
-        <p style={{ fontSize: '8.5pt' }}>{pedido.producto.nombre}</p>
-        <p style={{ fontSize: '7pt', color: '#555' }}>SKU: {pedido.producto.sku}</p>
-      </div>
-
-      {/* Pie */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        {pedido.transportista && (
+      {/* PEDIDO + PRODUCTO */}
+      <div style={{ borderBottom: '1px dashed #888', paddingBottom: '0.15cm', marginBottom: '0.15cm' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <p style={{ fontSize: '6.5pt', color: '#666' }}>TRANSPORTISTA</p>
-            <p style={{ fontSize: '9pt', fontWeight: 'bold' }}>{pedido.transportista}</p>
+            <p style={{ fontSize: '6pt', color: '#555', margin: '0 0 1px 0' }}>Nº PEDIDO AMAZON</p>
+            <p style={{ fontSize: '8.5pt', fontWeight: 'bold', letterSpacing: '0.02cm', margin: 0 }}>{pedido.amazonOrderId}</p>
           </div>
-        )}
-        {pedido.peso && (
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: '6.5pt', color: '#666' }}>PESO</p>
-            <p style={{ fontSize: '9pt', fontWeight: 'bold' }}>{pedido.peso} kg</p>
+          {pedido.peso && (
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: '6pt', color: '#555', margin: '0 0 1px 0' }}>PESO</p>
+              <p style={{ fontSize: '8.5pt', fontWeight: 'bold', margin: 0 }}>{pedido.peso} kg</p>
+            </div>
+          )}
+        </div>
+        <p style={{ fontSize: '7pt', color: '#444', margin: '0.1cm 0 1px 0' }}>ARTÍCULO</p>
+        <p style={{ fontSize: '7.5pt', margin: '0 0 1px 0' }}>{pedido.producto.nombre.slice(0, 80)}</p>
+        <p style={{ fontSize: '6.5pt', color: '#555', margin: 0 }}>SKU: {pedido.producto.sku}</p>
+      </div>
+
+      {/* PIE: transportista + tracking */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {pedido.transportista ? (
+          <div>
+            <p style={{ fontSize: '6pt', color: '#555', margin: '0 0 1px 0' }}>TRANSPORTISTA</p>
+            <p style={{ fontSize: '9pt', fontWeight: 'bold', margin: 0 }}>{pedido.transportista.toUpperCase()}</p>
+          </div>
+        ) : (
+          <div>
+            <p style={{ fontSize: '6pt', color: '#555', margin: '0 0 1px 0' }}>SERVICIO</p>
+            <p style={{ fontSize: '8pt', fontWeight: 'bold', margin: 0 }}>ESTÁNDAR</p>
           </div>
         )}
         {pedido.trackingNumber && (
-          <div>
-            <p style={{ fontSize: '6.5pt', color: '#666' }}>TRACKING</p>
-            <p style={{ fontSize: '7.5pt' }}>{pedido.trackingNumber}</p>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: '6pt', color: '#555', margin: '0 0 1px 0' }}>TRACKING</p>
+            <p style={{ fontSize: '7pt', fontWeight: 'bold', margin: 0 }}>{pedido.trackingNumber}</p>
           </div>
         )}
       </div>
+
     </div>
   )
 }

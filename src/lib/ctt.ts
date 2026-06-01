@@ -146,7 +146,7 @@ export async function createCTTShipment(pedido: PedidoForCTT): Promise<string> {
     recipient_postal_code: pedido.destinatarioCP,
     recipient_address: pedido.destinatarioDireccion || 'Sin dirección',
     recipient_town: pedido.destinatarioCiudad,
-    shipping_date: new Date().toISOString().split('T')[0],
+    shipping_date: new Intl.DateTimeFormat('sv', { timeZone: 'Europe/Madrid' }).format(new Date()),
     items: [{
       item_weight_declared: pedido.peso ?? 1,
       item_length_declared: 0,

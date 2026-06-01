@@ -175,7 +175,7 @@ export async function createCTTShipment(pedido: PedidoForCTT): Promise<string> {
   return shippingCode
 }
 
-export async function getCTTLabel(shippingCode: string): Promise<Buffer> {
+export async function getCTTLabel(shippingCode: string): Promise<Uint8Array> {
   const { token, cfg } = await getCTTToken()
   const { apiBase } = getCTTUrls(cfg.sandbox)
 
@@ -194,13 +194,13 @@ export async function getCTTLabel(shippingCode: string): Promise<Buffer> {
 
   const ct = res.headers.get('content-type') ?? ''
   if (ct.includes('pdf') || ct.includes('octet-stream')) {
-    return Buffer.from(await res.arrayBuffer())
+    return new Uint8Array(await res.arrayBuffer())
   }
 
   // Maybe base64 JSON
   const data = await res.json()
   const b64: string = data.label ?? data.file ?? data.content ?? data.data
-  if (b64) return Buffer.from(b64, 'base64')
+  if (b64) return new Uint8Array(Buffer.from(b64, 'base64'))
 
   throw new Error('CTT no devolvió la etiqueta en formato esperado')
 }

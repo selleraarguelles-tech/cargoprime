@@ -28,7 +28,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
       },
     })
 
-    return new NextResponse(pdf, {
+    return new NextResponse(new Uint8Array(pdf), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="etiqueta-${pedido.amazonOrderId}.pdf"`,

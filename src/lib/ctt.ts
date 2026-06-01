@@ -180,7 +180,7 @@ export async function getCTTLabel(shippingCode: string): Promise<Uint8Array> {
   const { token, cfg } = await getCTTToken()
   const { apiBase } = getCTTUrls(cfg.sandbox)
 
-  const url = `${apiBase}/integrations/trf/labelling/v1.0/shippings/${encodeURIComponent(shippingCode)}/shipping-labels?label_type_code=PDF&model_type_code=SINGLE&label_offset=1`
+  const url = `${apiBase}/integrations/trf/labelling/v1.0/shippings/${encodeURIComponent(shippingCode)}/shipping-labels?label_type_code=PDF&model_type_code=MULTI4&label_offset=1`
 
   const res = await fetch(url, {
     method: 'GET',
@@ -193,15 +193,25 @@ export async function getCTTLabel(shippingCode: string): Promise<Uint8Array> {
 
   if (!res.ok) throw new Error(`CTT label (${res.status}): ${await res.text()}`)
 
-  const ct = res.headers.get('content-type') ?? ''
-  if (ct.includes('pdf') || ct.includes('octet-stream')) {
-    return new Uint8Array(await res.arrayBuffer())
+  const rawBytes = new Uint8Array(await res.arrayBuffer())
+
+  // Detect PDF by magic bytes %PDF
+  if (rawBytes[0] === 0x25 && rawBytes[1] === 0x50 && rawBytes[2] === 0x44 && rawBytes[3] === 0x46) {
+    return rawBytes
   }
 
-  // Maybe base64 JSON
-  const data = await res.json()
-  const b64: string = data.label ?? data.file ?? data.content ?? data.data
-  if (b64) return new Uint8Array(Buffer.from(b64, 'base64'))
-
-  throw new Error('CTT no devolvió la etiqueta en formato esperado')
+  // Try JSON with base64-encoded PDF
+  const text = new TextDecoder().decode(rawBytes)
+  try {
+    const json = JSON.parse(text)
+    const b64: string = json.label ?? json.file ?? json.content ?? json.data ?? json.pdf
+    if (b64) {
+      const decoded = new Uint8Array(Buffer.from(b64, 'base64'))
+      if (decoded[0] === 0x25 && decoded[1] === 0x50) return decoded // %PD
+      return decoded
+    }
+    throw new Error(`CTT label: respuesta inesperada: ${text.slice(0, 200)}`)
+  } catch {
+    throw new Error(`CTT label: contenido no reconocido (${res.headers.get('content-type')}): ${text.slice(0, 200)}`)
+  }
 }

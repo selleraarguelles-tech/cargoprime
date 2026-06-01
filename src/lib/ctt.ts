@@ -166,6 +166,7 @@ export async function createCTTShipment(pedido: PedidoForCTT): Promise<string> {
   const data = await res.json()
   // CTT returns the shipping code in various possible fields
   const shippingCode: string =
+    data.shipping_data?.shipping_code ??
     data.shipping_code ?? data.shippingCode ?? data.code ?? data.data?.shipping_code ?? ''
   if (!shippingCode) {
     console.error('[ctt] unexpected shipment response:', JSON.stringify(data))

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Download, ArrowLeft, CheckCircle } from 'lucide-react'
+import { Truck, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Barcode from 'react-barcode'
@@ -28,6 +28,32 @@ interface Props { pedido: Pedido; isAdmin?: boolean }
 export default function EtiquetaView({ pedido, isAdmin = false }: Props) {
   const router = useRouter()
   const [marcando, setMarcando] = useState(false)
+  const [generando, setGenerando] = useState(false)
+  const [errorCTT, setErrorCTT] = useState('')
+
+  async function generarEtiquetaCTT() {
+    setGenerando(true)
+    setErrorCTT('')
+    try {
+      const res = await fetch(`/api/pedidos/${pedido.id}/ctt-label`, { method: 'POST' })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error ?? 'Error al generar etiqueta')
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `etiqueta-${pedido.amazonOrderId}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+      router.refresh()
+    } catch (e: unknown) {
+      setErrorCTT(e instanceof Error ? e.message : 'Error desconocido')
+    } finally {
+      setGenerando(false)
+    }
+  }
 
   async function marcarPreparando() {
     if (pedido.estado !== 'sin_etiqueta') return
@@ -66,17 +92,23 @@ export default function EtiquetaView({ pedido, isAdmin = false }: Props) {
                 {marcando ? 'Actualizando...' : 'Marcar como preparando'}
               </button>
             )}
-            <a
-              href={`/api/pedidos/${pedido.id}/label`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            <button
+              onClick={generarEtiquetaCTT}
+              disabled={generando}
+              className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60"
             >
-              <Download className="w-4 h-4" />
-              Descargar etiqueta Amazon
-            </a>
+              <Truck className="w-4 h-4" />
+              {generando ? 'Generando etiqueta...' : 'Crear etiqueta CTT'}
+            </button>
           </div>
         </div>
+
+        {errorCTT && (
+          <div className="flex items-start gap-2 bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg border border-red-100">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            {errorCTT}
+          </div>
+        )}
 
         <div className="bg-gray-100 rounded-xl p-6 flex items-center justify-center">
           <Etiqueta pedido={pedido} />

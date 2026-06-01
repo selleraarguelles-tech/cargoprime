@@ -10,6 +10,15 @@ const AMAZON_KEYS = [
   'amazon_redirect_uri',
 ]
 
+const CTT_KEYS = [
+  'ctt_client_id', 'ctt_client_secret', 'ctt_username', 'ctt_password',
+  'ctt_client_center_code', 'ctt_sandbox',
+  'ctt_sender_name', 'ctt_sender_address', 'ctt_sender_postal_code',
+  'ctt_sender_town', 'ctt_sender_country_code', 'ctt_sender_email', 'ctt_sender_phone',
+]
+
+const ALL_KEYS = [...AMAZON_KEYS, ...CTT_KEYS]
+
 export async function GET() {
   const session = await auth()
   if (session?.user?.role !== 'admin') {
@@ -17,7 +26,7 @@ export async function GET() {
   }
 
   const rows = await prisma.configuracion.findMany({
-    where: { clave: { in: AMAZON_KEYS } },
+    where: { clave: { in: ALL_KEYS } },
   })
 
   const config: Record<string, string> = {}
@@ -43,7 +52,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
 
   // Only allow the amazon keys to be saved via this endpoint
-  const entries = Object.entries(body).filter(([k]) => AMAZON_KEYS.includes(k)) as [string, string][]
+  const entries = Object.entries(body).filter(([k]) => ALL_KEYS.includes(k)) as [string, string][]
 
   await Promise.all(
     entries.map(([clave, valor]) =>

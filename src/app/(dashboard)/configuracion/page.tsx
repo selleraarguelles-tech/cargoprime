@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Settings, ShoppingBag, CheckCircle, AlertCircle, ExternalLink, Copy, Eye, EyeOff } from 'lucide-react'
+import { Settings, ShoppingBag, CheckCircle, AlertCircle, ExternalLink, Copy, Eye, EyeOff, Truck } from 'lucide-react'
 
 export default function ConfiguracionPage() {
   const [form, setForm] = useState({
@@ -9,6 +9,19 @@ export default function ConfiguracionPage() {
     amazon_lwa_client_id: '',
     amazon_lwa_client_secret: '',
     amazon_redirect_uri: '',
+    ctt_client_id: '',
+    ctt_client_secret: '',
+    ctt_username: '',
+    ctt_password: '',
+    ctt_client_center_code: '',
+    ctt_sandbox: 'true',
+    ctt_sender_name: '',
+    ctt_sender_address: '',
+    ctt_sender_postal_code: '',
+    ctt_sender_town: '',
+    ctt_sender_country_code: 'ES',
+    ctt_sender_email: '',
+    ctt_sender_phone: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -26,6 +39,19 @@ export default function ConfiguracionPage() {
           amazon_lwa_client_id: data.amazon_lwa_client_id ?? '',
           amazon_lwa_client_secret: data.amazon_lwa_client_secret ?? '',
           amazon_redirect_uri: data.amazon_redirect_uri ?? data.amazon_redirect_uri_suggestion ?? '',
+          ctt_client_id: data.ctt_client_id ?? '',
+          ctt_client_secret: data.ctt_client_secret ?? '',
+          ctt_username: data.ctt_username ?? '',
+          ctt_password: data.ctt_password ?? '',
+          ctt_client_center_code: data.ctt_client_center_code ?? '',
+          ctt_sandbox: data.ctt_sandbox ?? 'true',
+          ctt_sender_name: data.ctt_sender_name ?? '',
+          ctt_sender_address: data.ctt_sender_address ?? '',
+          ctt_sender_postal_code: data.ctt_sender_postal_code ?? '',
+          ctt_sender_town: data.ctt_sender_town ?? '',
+          ctt_sender_country_code: data.ctt_sender_country_code ?? 'ES',
+          ctt_sender_email: data.ctt_sender_email ?? '',
+          ctt_sender_phone: data.ctt_sender_phone ?? '',
         }))
         if (data.amazon_redirect_uri_suggestion) setUriSuggestion(data.amazon_redirect_uri_suggestion)
         setLoading(false)
@@ -210,6 +236,113 @@ export default function ConfiguracionPage() {
               </div>
             </form>
           )}
+        </div>
+      </div>
+
+      {/* CTT Express */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+          <div className="bg-red-100 rounded-lg p-2">
+            <Truck className="w-5 h-5 text-red-600" />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-semibold text-gray-900">CTT Express</h2>
+            <p className="text-xs text-gray-500">Credenciales para crear envíos y descargar etiquetas directamente desde los pedidos</p>
+          </div>
+          {form.ctt_client_id && form.ctt_sender_name && (
+            <span className="flex items-center gap-1.5 text-xs text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
+              <CheckCircle className="w-3.5 h-3.5" /> Configurado
+            </span>
+          )}
+        </div>
+        <div className="px-6 py-5 space-y-5">
+          {/* Entorno */}
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-medium text-gray-700">Entorno</label>
+            <select
+              value={form.ctt_sandbox}
+              onChange={e => setForm(f => ({ ...f, ctt_sandbox: e.target.value }))}
+              className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+            >
+              <option value="true">UAT (pruebas)</option>
+              <option value="false">Producción</option>
+            </select>
+          </div>
+
+          {/* Credenciales API */}
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Credenciales API</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>Client ID</label>
+                <input value={form.ctt_client_id} onChange={e => setForm(f => ({ ...f, ctt_client_id: e.target.value }))} className={inputClass} placeholder="4l9aip2m3l0e..." />
+              </div>
+              <div>
+                <label className={labelClass}>Client Center Code</label>
+                <input value={form.ctt_client_center_code} onChange={e => setForm(f => ({ ...f, ctt_client_center_code: e.target.value }))} className={inputClass} placeholder="4671400001" />
+              </div>
+              <div>
+                <label className={labelClass}>Client Secret</label>
+                <div className="relative">
+                  <input type={showSecret ? 'text' : 'password'} value={form.ctt_client_secret} onChange={e => setForm(f => ({ ...f, ctt_client_secret: e.target.value }))} className={`${inputClass} pr-10`} placeholder="••••••••••••" />
+                  <button type="button" onClick={() => setShowSecret(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className={labelClass}>Usuario</label>
+                  <input value={form.ctt_username} onChange={e => setForm(f => ({ ...f, ctt_username: e.target.value }))} className={inputClass} placeholder="user1" />
+                </div>
+                <div>
+                  <label className={labelClass}>Contraseña</label>
+                  <input type={showSecret ? 'text' : 'password'} value={form.ctt_password} onChange={e => setForm(f => ({ ...f, ctt_password: e.target.value }))} className={inputClass} placeholder="••••••" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Datos del remitente (almacén) */}
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Datos del almacén (remitente)</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className={labelClass}>Nombre del remitente</label>
+                <input value={form.ctt_sender_name} onChange={e => setForm(f => ({ ...f, ctt_sender_name: e.target.value }))} className={inputClass} placeholder="Almacén FBA" />
+              </div>
+              <div className="col-span-2">
+                <label className={labelClass}>Dirección</label>
+                <input value={form.ctt_sender_address} onChange={e => setForm(f => ({ ...f, ctt_sender_address: e.target.value }))} className={inputClass} placeholder="Calle Mayor 10" />
+              </div>
+              <div>
+                <label className={labelClass}>Código postal</label>
+                <input value={form.ctt_sender_postal_code} onChange={e => setForm(f => ({ ...f, ctt_sender_postal_code: e.target.value }))} className={inputClass} placeholder="05001" />
+              </div>
+              <div>
+                <label className={labelClass}>Ciudad</label>
+                <input value={form.ctt_sender_town} onChange={e => setForm(f => ({ ...f, ctt_sender_town: e.target.value }))} className={inputClass} placeholder="Ávila" />
+              </div>
+              <div>
+                <label className={labelClass}>País</label>
+                <input value={form.ctt_sender_country_code} onChange={e => setForm(f => ({ ...f, ctt_sender_country_code: e.target.value }))} className={inputClass} placeholder="ES" maxLength={2} />
+              </div>
+              <div>
+                <label className={labelClass}>Teléfono (opcional)</label>
+                <input value={form.ctt_sender_phone} onChange={e => setForm(f => ({ ...f, ctt_sender_phone: e.target.value }))} className={inputClass} placeholder="+34 999999999" />
+              </div>
+              <div className="col-span-2">
+                <label className={labelClass}>Email de notificación (opcional)</label>
+                <input value={form.ctt_sender_email} onChange={e => setForm(f => ({ ...f, ctt_sender_email: e.target.value }))} className={inputClass} placeholder="almacen@ejemplo.com" />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-1">
+            <button onClick={handleSave} disabled={saving} className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg disabled:opacity-60 transition-colors">
+              {saving ? 'Guardando...' : 'Guardar'}
+            </button>
+          </div>
         </div>
       </div>
 

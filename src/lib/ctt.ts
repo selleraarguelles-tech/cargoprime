@@ -195,23 +195,33 @@ export async function getCTTLabel(shippingCode: string): Promise<Uint8Array> {
 
   const rawBytes = new Uint8Array(await res.arrayBuffer())
 
-  // Detect PDF by magic bytes %PDF
+  // Valid PDF starts with %PDF
   if (rawBytes[0] === 0x25 && rawBytes[1] === 0x50 && rawBytes[2] === 0x44 && rawBytes[3] === 0x46) {
     return rawBytes
   }
 
-  // Try JSON with base64-encoded PDF
-  const text = new TextDecoder().decode(rawBytes)
+  // Log what CTT actually returned so we can debug
+  const text = new TextDecoder().decode(rawBytes.slice(0, 1000))
+  console.error('[ctt-label] unexpected content-type:', res.headers.get('content-type'))
+  console.error('[ctt-label] response body (first 1000 chars):', text)
+
+  // Try JSON — look for a base64 PDF field
   try {
-    const json = JSON.parse(text)
-    const b64: string = json.label ?? json.file ?? json.content ?? json.data ?? json.pdf
-    if (b64) {
-      const decoded = new Uint8Array(Buffer.from(b64, 'base64'))
-      if (decoded[0] === 0x25 && decoded[1] === 0x50) return decoded // %PD
-      return decoded
+    const json = JSON.parse(text + new TextDecoder().decode(rawBytes.slice(1000)))
+    const candidates = [
+      json.label, json.file, json.content, json.pdf,
+      json.data?.label, json.data?.file, json.data?.content, json.data?.pdf,
+      json.labels?.[0]?.label, json.labels?.[0]?.file,
+    ]
+    for (const candidate of candidates) {
+      if (typeof candidate !== 'string' || !candidate) continue
+      const decoded = new Uint8Array(Buffer.from(candidate, 'base64'))
+      if (decoded[0] === 0x25 && decoded[1] === 0x50 && decoded[2] === 0x44 && decoded[3] === 0x46) return decoded // %PDF
     }
-    throw new Error(`CTT label: respuesta inesperada: ${text.slice(0, 200)}`)
-  } catch {
-    throw new Error(`CTT label: contenido no reconocido (${res.headers.get('content-type')}): ${text.slice(0, 200)}`)
-  }
+  } catch { /* not JSON */ }
+
+  throw new Error(
+    `CTT devolvió formato no reconocido (content-type: ${res.headers.get('content-type')}). ` +
+    `Respuesta: ${text.slice(0, 300)}`
+  )
 }

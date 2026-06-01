@@ -210,6 +210,7 @@ export async function getCTTLabel(shippingCode: string): Promise<Uint8Array> {
     const json = JSON.parse(text + new TextDecoder().decode(rawBytes.slice(1000)))
     const candidates = [
       json.label, json.file, json.content, json.pdf,
+      json.data?.[0]?.label, json.data?.[0]?.file, json.data?.[0]?.content,
       json.data?.label, json.data?.file, json.data?.content, json.data?.pdf,
       json.labels?.[0]?.label, json.labels?.[0]?.file,
     ]

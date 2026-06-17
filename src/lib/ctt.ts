@@ -122,6 +122,8 @@ interface PedidoForCTT {
   destinatarioCiudad: string
   destinatarioPais: string
   peso: number | null
+  productoNombre?: string | null
+  productoSku?: string | null
 }
 
 export async function createCTTShipment(pedido: PedidoForCTT): Promise<string> {
@@ -131,7 +133,10 @@ export async function createCTTShipment(pedido: PedidoForCTT): Promise<string> {
   const body = {
     client_center_code: cfg.clientCenterCode,
     shipping_type_code: 'C24',
-    client_references: [pedido.amazonOrderId.slice(0, 50), ''],
+    client_references: [
+      pedido.amazonOrderId.slice(0, 50),
+      (pedido.productoNombre ?? '').slice(0, 50),
+    ],
     shipping_weight_declared: pedido.peso ?? 1,
     item_count: 1,
     sender_name: cfg.senderName,
@@ -147,6 +152,9 @@ export async function createCTTShipment(pedido: PedidoForCTT): Promise<string> {
     recipient_address: pedido.destinatarioDireccion || 'Sin dirección',
     recipient_town: pedido.destinatarioCiudad,
     shipping_date: new Intl.DateTimeFormat('sv', { timeZone: 'Europe/Madrid' }).format(new Date()),
+    ...(pedido.productoSku && {
+      delivery: { comments: pedido.productoSku.slice(0, 100) },
+    }),
     items: [{
       item_weight_declared: pedido.peso ?? 1,
       item_length_declared: 0,
@@ -155,7 +163,7 @@ export async function createCTTShipment(pedido: PedidoForCTT): Promise<string> {
     }],
   }
 
-  const res = await fetch(`${apiBase}/integrations/manifest/v1.0/shippings`, {
+  const res = await fetch(`${apiBase}/integrations/manifest/v2.0/shippings`, {
     method: 'POST',
     headers: cttHeaders(token, cfg),
     body: JSON.stringify(body),
@@ -193,36 +201,19 @@ export async function getCTTLabel(shippingCode: string): Promise<Uint8Array> {
 
   if (!res.ok) throw new Error(`CTT label (${res.status}): ${await res.text()}`)
 
-  const rawBytes = new Uint8Array(await res.arrayBuffer())
+  const contentType = res.headers.get('content-type') ?? ''
 
-  // Valid PDF starts with %PDF
-  if (rawBytes[0] === 0x25 && rawBytes[1] === 0x50 && rawBytes[2] === 0x44 && rawBytes[3] === 0x46) {
-    return rawBytes
+  if (contentType.includes('pdf') || contentType.includes('octet-stream')) {
+    return new Uint8Array(await res.arrayBuffer())
   }
 
-  // Log what CTT actually returned so we can debug
-  const text = new TextDecoder().decode(rawBytes.slice(0, 1000))
-  console.error('[ctt-label] unexpected content-type:', res.headers.get('content-type'))
-  console.error('[ctt-label] response body (first 1000 chars):', text)
+  // CTT returns JSON: { "data": [{ "label": "<base64 PDF>" }] }
+  const json = await res.json()
+  const b64: string | undefined = json?.data?.[0]?.label
 
-  // Try JSON — look for a base64 PDF field
-  try {
-    const json = JSON.parse(text + new TextDecoder().decode(rawBytes.slice(1000)))
-    const candidates = [
-      json.label, json.file, json.content, json.pdf,
-      json.data?.[0]?.label, json.data?.[0]?.file, json.data?.[0]?.content,
-      json.data?.label, json.data?.file, json.data?.content, json.data?.pdf,
-      json.labels?.[0]?.label, json.labels?.[0]?.file,
-    ]
-    for (const candidate of candidates) {
-      if (typeof candidate !== 'string' || !candidate) continue
-      const decoded = new Uint8Array(Buffer.from(candidate, 'base64'))
-      if (decoded[0] === 0x25 && decoded[1] === 0x50 && decoded[2] === 0x44 && decoded[3] === 0x46) return decoded // %PDF
-    }
-  } catch { /* not JSON */ }
+  if (!b64) {
+    throw new Error(`CTT label: campo no encontrado. Respuesta: ${JSON.stringify(json).slice(0, 400)}`)
+  }
 
-  throw new Error(
-    `CTT devolvió formato no reconocido (content-type: ${res.headers.get('content-type')}). ` +
-    `Respuesta: ${text.slice(0, 300)}`
-  )
+  return new Uint8Array(Buffer.from(b64, 'base64'))
 }

@@ -12,11 +12,18 @@ export async function POST(_req: NextRequest, { params }: Params) {
   if (!session?.user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
   const { id } = await params
-  const pedido = await prisma.pedido.findUnique({ where: { id: parseInt(id) } })
+  const pedido = await prisma.pedido.findUnique({
+    where: { id: parseInt(id) },
+    include: { producto: { select: { nombre: true, sku: true } } },
+  })
   if (!pedido) return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 })
 
   try {
-    const shippingCode = await createCTTShipment(pedido)
+    const shippingCode = await createCTTShipment({
+      ...pedido,
+      productoNombre: pedido.producto?.nombre ?? null,
+      productoSku: pedido.producto?.sku ?? null,
+    })
     const pdf = await getCTTLabel(shippingCode)
 
     await prisma.pedido.update({

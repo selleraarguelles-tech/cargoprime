@@ -152,14 +152,12 @@ export async function createCTTShipment(pedido: PedidoForCTT): Promise<string> {
     recipient_address: pedido.destinatarioDireccion || 'Sin dirección',
     recipient_town: pedido.destinatarioCiudad,
     shipping_date: new Intl.DateTimeFormat('sv', { timeZone: 'Europe/Madrid' }).format(new Date()),
-    ...(pedido.productoSku && {
-      delivery: { comments: pedido.productoSku.slice(0, 100) },
-    }),
     items: [{
       item_weight_declared: pedido.peso ?? 1,
       item_length_declared: 0,
       item_width_declared: 0,
       item_height_declared: 0,
+      ...(pedido.productoSku && { item_comments: pedido.productoSku.slice(0, 100) }),
     }],
   }
 

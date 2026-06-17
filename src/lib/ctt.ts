@@ -135,7 +135,7 @@ export async function createCTTShipment(pedido: PedidoForCTT): Promise<string> {
     shipping_type_code: 'C24',
     client_references: [
       pedido.amazonOrderId.slice(0, 50),
-      (pedido.productoNombre ?? '').slice(0, 50),
+      (pedido.productoNombre ?? '').slice(0, 100),
     ],
     shipping_weight_declared: pedido.peso ?? 1,
     item_count: 1,

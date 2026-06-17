@@ -25,8 +25,15 @@ export async function GET(req: NextRequest) {
 
   const cuentas = await prisma.cuentaAmazon.findMany({ where: { activo: true } })
 
-  // Look back 15 min to cover gaps between cron runs (cron every 5 min + buffer)
-  const since = new Date(Date.now() - 15 * 60 * 1000)
+  // Use last sync timestamp from DB so no orders are missed between cron runs.
+  // If never synced before, default to 24h ago.
+  const lastSyncRaw = await prisma.configuracion.findUnique({ where: { clave: 'cron_last_sync_at' } })
+  const since = lastSyncRaw
+    ? new Date(lastSyncRaw.valor)
+    : new Date(Date.now() - 24 * 60 * 60 * 1000)
+
+  // Save current time before fetching so no orders fall through the gap
+  const syncStartedAt = new Date().toISOString()
 
   let totalCreados = 0
   const allErrors: string[] = []
@@ -104,6 +111,13 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  console.log(`[cron/sync-orders] creados=${totalCreados} errores=${allErrors.length}`)
-  return NextResponse.json({ ok: true, totalCreados, errores: allErrors.slice(0, 10) })
+  // Persist the sync start time so next run picks up from here
+  await prisma.configuracion.upsert({
+    where: { clave: 'cron_last_sync_at' },
+    update: { valor: syncStartedAt },
+    create: { clave: 'cron_last_sync_at', valor: syncStartedAt },
+  })
+
+  console.log(`[cron/sync-orders] since=${since.toISOString()} creados=${totalCreados} errores=${allErrors.length}`)
+  return NextResponse.json({ ok: true, since: since.toISOString(), totalCreados, errores: allErrors.slice(0, 10) })
 }

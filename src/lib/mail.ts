@@ -12,6 +12,7 @@ function createTransporter() {
   })
 }
 
+
 export async function sendPasswordResetEmail(to: string, nombre: string, tempPassword: string) {
   const from = process.env.SMTP_FROM ?? 'Almacén FBM <no-reply@almacen.local>'
 

@@ -6,7 +6,7 @@ function getCTTUrls(sandbox: boolean) {
   return {
     authUrl: sandbox
       ? 'https://es-ctt-uat-integration-clients-pool-ids.auth.eu-west-1.amazoncognito.com/oauth2/token'
-      : 'https://es-ctt-integration-clients-pool-ids.auth.eu-west-1.amazoncognito.com/oauth2/token',
+      : 'https://es-ctt-integration-clients-pool-ids.auth.eu-central-1.amazoncognito.com/oauth2/token',
     apiBase: sandbox
       ? 'https://api-test.cttexpress.com'
       : 'https://api.cttexpress.com',

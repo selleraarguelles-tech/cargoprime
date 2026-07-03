@@ -198,12 +198,12 @@ export default function EnviosClient({ envios: initial, clientes, transportistas
 
       {/* Lista de envíos */}
       {envios.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+        <div className="bg-white rounded-xl border border-[#e4e8f0] p-12 text-center">
           <Package className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 text-sm">
             {hasActiveFilters ? 'No se encontraron envíos con los filtros aplicados' : 'No hay envíos registrados'}
           </p>
-          {isAdmin && !hasActiveFilters && <p className="text-gray-400 text-xs mt-1">Haz clic en "Nuevo envío" para registrar el primer envío</p>}
+          {isAdmin && !hasActiveFilters && <p className="text-gray-400 text-xs mt-1">Haz clic en &quot;Nuevo envío&quot; para registrar el primer envío</p>}
         </div>
       ) : (
         <div className="space-y-3">
@@ -214,7 +214,7 @@ export default function EnviosClient({ envios: initial, clientes, transportistas
             const hasApi = ['correos', 'gls'].includes(envio.transportista)
 
             return (
-              <div key={envio.id} className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+              <div key={envio.id} className="bg-white rounded-xl border border-[#e4e8f0] overflow-hidden">
                 <div className="p-4 flex items-start gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -246,7 +246,7 @@ export default function EnviosClient({ envios: initial, clientes, transportistas
                       )}
                     </div>
                     {envio.ultimoEvento && (
-                      <p className="text-xs text-gray-600 mt-1 italic">"{envio.ultimoEvento}"</p>
+                      <p className="text-xs text-gray-600 mt-1 italic">&quot;{envio.ultimoEvento}&quot;</p>
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">

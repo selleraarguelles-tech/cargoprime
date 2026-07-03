@@ -113,7 +113,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         {metrics.map(({ label, value, icon: Icon, color, href, alert }) => (
           <Link key={label} href={href}>
-            <div className={`bg-white rounded-xl shadow-sm border p-4 flex items-center gap-3 hover:shadow-md transition-shadow h-full ${alert ? 'border-red-200' : 'border-gray-100'}`}>
+            <div className={`bg-white rounded-xl shadow-sm border p-4 flex items-center gap-3 hover:shadow-md transition-shadow h-full ${alert ? 'border-red-200' : 'border-[#e4e8f0]'}`}>
               <div className={`${color} rounded-lg p-2.5 shrink-0`}>
                 <Icon className="w-5 h-5 text-white" />
               </div>
@@ -135,7 +135,7 @@ export default async function DashboardPage() {
       {/* Gráficas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Pedidos por día */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-[#e4e8f0] p-6">
           <h2 className="font-semibold text-gray-900 flex items-center gap-2 mb-1">
             <BarChart3 className="w-4 h-4 text-gray-400" />
             Pedidos por día
@@ -157,7 +157,7 @@ export default async function DashboardPage() {
 
         {/* Por canal + estado de envíos */}
         <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-[#e4e8f0] p-6">
             <h2 className="font-semibold text-gray-900 text-sm mb-3">Pedidos por canal <span className="text-xs font-normal text-gray-400">(30 días)</span></h2>
             {m.total30d === 0 ? (
               <p className="text-sm text-gray-400">Sin pedidos en el período</p>
@@ -178,7 +178,7 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-[#e4e8f0] p-6">
             <h2 className="font-semibold text-gray-900 text-sm mb-3">Estado de los envíos</h2>
             {m.tracking.total === 0 ? (
               <p className="text-sm text-gray-400">Aún sin datos de seguimiento</p>
@@ -202,8 +202,8 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Últimos pedidos */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-[#e4e8f0]">
+          <div className="px-6 py-4 border-b border-[#e4e8f0] flex items-center justify-between">
             <h2 className="font-semibold text-gray-900 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-gray-400" />
               Últimos pedidos
@@ -238,8 +238,8 @@ export default async function DashboardPage() {
         </div>
 
         {/* Alertas de stock */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="bg-white rounded-xl shadow-sm border border-[#e4e8f0]">
+          <div className="px-6 py-4 border-b border-[#e4e8f0] flex items-center justify-between">
             <h2 className="font-semibold text-gray-900 flex items-center gap-2">
               <Package className="w-4 h-4 text-gray-400" />
               Stock bajo mínimos

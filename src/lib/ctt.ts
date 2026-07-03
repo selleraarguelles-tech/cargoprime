@@ -248,7 +248,12 @@ export async function getCTTTracking(shippingCode: string): Promise<CTTTrackingR
 
   if (!res.ok) throw new Error(`CTT tracking (${res.status}): ${await res.text()}`)
 
-  const json = await res.json()
+  const raw = await res.text()
+  if (!raw) {
+    return { estado: 'No encontrado en CTT', entregado: false, ultimoEvento: undefined, eventos: [] }
+  }
+
+  const json = JSON.parse(raw)
   const events: CTTTrackingEvent[] = json?.data?.shipping_history?.events ?? []
   const statusEvents = events.filter(e => e.type === 'STATUS')
   const ultimo = statusEvents[statusEvents.length - 1] ?? events[events.length - 1]

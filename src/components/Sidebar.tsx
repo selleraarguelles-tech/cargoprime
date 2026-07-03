@@ -20,6 +20,7 @@ import {
   Truck,
   Music2,
   Store,
+  BarChart3,
 } from 'lucide-react'
 
 interface SidebarUser {
@@ -39,6 +40,7 @@ const navItems = [
   { href: '/etiquetas', label: 'Etiquetas', icon: Tag },
   { href: '/envios', label: 'Envíos entrantes', icon: Truck },
   { href: '/clientes', label: 'Clientes', icon: Users },
+  { href: '/reportes', label: 'Reportes', icon: BarChart3 },
 ]
 
 const adminItems = [

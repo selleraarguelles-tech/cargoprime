@@ -3,7 +3,7 @@
 import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Warehouse, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { Boxes, Eye, EyeOff, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 
 function LoginForm() {
@@ -41,11 +41,11 @@ function LoginForm() {
   return (
     <div className="w-full max-w-md">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center bg-orange-500 rounded-2xl p-4 mb-4 shadow-lg">
-          <Warehouse className="w-8 h-8 text-white" />
+        <div className="inline-flex items-center justify-center bg-gradient-to-br from-[#e0b437] to-[#c9a227] rounded-2xl p-4 mb-4 shadow-lg shadow-amber-900/20">
+          <Boxes className="w-8 h-8 text-[#0d1526]" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Almacén FBM</h1>
-        <p className="text-gray-500 text-sm mt-1">Sistema de gestión logística</p>
+        <h1 className="text-2xl font-bold text-gray-900">Cargo<span className="text-[#c9a227]">Prime</span></h1>
+        <p className="text-gray-500 text-sm mt-1">Plataforma de fulfillment y logística</p>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
@@ -114,7 +114,7 @@ function LoginForm() {
         </div>
       </div>
 
-      <p className="text-center text-xs text-gray-400 mt-6">Amazon FBM · Gestión logística interna</p>
+      <p className="text-center text-xs text-gray-400 mt-6">CargoPrime · Logística de calidad</p>
     </div>
   )
 }

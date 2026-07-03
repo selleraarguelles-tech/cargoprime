@@ -7,6 +7,7 @@ import { Plus, Search, Tag } from 'lucide-react'
 import PedidosFilters from './PedidosFilters'
 import EstadoSelector from './EstadoSelector'
 import TrackingRefresh from './TrackingRefresh'
+import SyncAllButton from './SyncAllButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -54,10 +55,13 @@ export default async function PedidosPage({ searchParams }: Props) {
           <p className="text-gray-500 text-sm mt-1">{pedidos.length} pedido{pedidos.length !== 1 ? 's' : ''} encontrado{pedidos.length !== 1 ? 's' : ''}</p>
         </div>
         {isAdmin && (
-          <Link href="/pedidos/nuevo" className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            <Plus className="w-4 h-4" />
-            Nuevo pedido
-          </Link>
+          <div className="flex items-center gap-2">
+            <SyncAllButton />
+            <Link href="/pedidos/nuevo" className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              <Plus className="w-4 h-4" />
+              Nuevo pedido
+            </Link>
+          </div>
         )}
       </div>
 

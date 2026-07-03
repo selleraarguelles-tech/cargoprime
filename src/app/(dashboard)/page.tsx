@@ -141,16 +141,20 @@ export default async function DashboardPage() {
             Pedidos por día
           </h2>
           <p className="text-xs text-gray-400 mb-4">Últimos 14 días</p>
-          <div className="flex items-end gap-1.5 h-36">
+          <div className="h-40 flex items-end gap-1.5">
             {m.dias.map(d => (
-              <div key={d.clave} className="flex-1 flex flex-col items-center gap-1 group" title={`${d.clave}: ${d.count} pedidos`}>
-                <span className="text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">{d.count}</span>
+              <div key={d.clave} className="flex-1 h-full flex items-end relative group" title={`${d.label}: ${d.count} pedidos`}>
                 <div
                   className={`w-full rounded-t transition-colors ${d.count > 0 ? 'bg-orange-400 group-hover:bg-orange-500' : 'bg-gray-100'}`}
-                  style={{ height: `${Math.max(4, (d.count / maxDia) * 100)}%` }}
+                  style={{ height: `${maxDia > 0 ? Math.max(3, (d.count / maxDia) * 100) : 3}%` }}
                 />
-                <span className="text-[10px] text-gray-400">{d.label}</span>
+                <span className="absolute -top-4 left-0 right-0 text-center text-[10px] font-medium text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">{d.count}</span>
               </div>
+            ))}
+          </div>
+          <div className="flex gap-1.5 mt-1.5">
+            {m.dias.map(d => (
+              <span key={d.clave} className="flex-1 text-center text-[10px] text-gray-400">{d.label}</span>
             ))}
           </div>
         </div>

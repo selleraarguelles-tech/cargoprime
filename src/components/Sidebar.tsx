@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   ShoppingCart,
   Package,
-  Tag,
   Users,
   UserCircle,
   Settings,
@@ -23,6 +22,8 @@ import {
   BarChart3,
   Boxes,
   ChevronLeft,
+  PackageCheck,
+  Radar,
 } from 'lucide-react'
 
 interface SidebarUser {
@@ -53,7 +54,8 @@ const groups: NavGroup[] = [
     items: [
       { href: '/', label: 'Dashboard', icon: LayoutDashboard },
       { href: '/pedidos', label: 'Pedidos', icon: ShoppingCart },
-      { href: '/etiquetas', label: 'Etiquetas', icon: Tag },
+      { href: '/etiquetas', label: 'Por preparar', icon: PackageCheck },
+      { href: '/seguimiento', label: 'Seguimiento', icon: Radar },
       { href: '/reportes', label: 'Reportes', icon: BarChart3 },
     ],
   },

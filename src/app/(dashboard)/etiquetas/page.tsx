@@ -16,8 +16,8 @@ export default async function EtiquetasPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Etiquetas</h1>
-          <p className="text-gray-500 text-sm mt-1">Pedidos pendientes de etiquetar o preparar · selecciona varios para generarlas en un solo PDF</p>
+          <h1 className="text-xl font-bold text-gray-900">Por preparar</h1>
+          <p className="text-gray-500 text-sm mt-0.5">Cola de pedidos pendientes de etiquetar y preparar · selecciona varios para generar sus etiquetas en un solo PDF</p>
         </div>
         <SyncButton />
       </div>

@@ -10,7 +10,7 @@ import EstadoSelector from './EstadoSelector'
 export const dynamic = 'force-dynamic'
 
 interface Props {
-  searchParams: Promise<{ estado?: string; cliente?: string; buscar?: string }>
+  searchParams: Promise<{ estado?: string; cliente?: string; buscar?: string; desde?: string; hasta?: string }>
 }
 
 export default async function PedidosPage({ searchParams }: Props) {
@@ -18,7 +18,7 @@ export default async function PedidosPage({ searchParams }: Props) {
   const isAdmin = session?.user?.role === 'admin'
 
   const params = await searchParams
-  const { estado, cliente, buscar } = params
+  const { estado, cliente, buscar, desde, hasta } = params
 
   const clientes = await prisma.cliente.findMany({ orderBy: { nombre: 'asc' } })
 
@@ -31,6 +31,12 @@ export default async function PedidosPage({ searchParams }: Props) {
       { destinatarioNombre: { contains: buscar } },
       { destinatarioCiudad: { contains: buscar } },
     ]
+  }
+  if (desde || hasta) {
+    const createdAt: Record<string, Date> = {}
+    if (desde) createdAt.gte = new Date(`${desde}T00:00:00`)
+    if (hasta) createdAt.lte = new Date(`${hasta}T23:59:59.999`)
+    where.createdAt = createdAt
   }
 
   const pedidos = await prisma.pedido.findMany({
@@ -54,7 +60,7 @@ export default async function PedidosPage({ searchParams }: Props) {
         )}
       </div>
 
-      <PedidosFilters clientes={clientes} estadoActivo={estado} clienteActivo={cliente} buscarActivo={buscar} />
+      <PedidosFilters clientes={clientes} estadoActivo={estado} clienteActivo={cliente} buscarActivo={buscar} desdeActivo={desde} hastaActivo={hasta} />
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">

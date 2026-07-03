@@ -123,8 +123,8 @@ export default async function PedidosPage({ searchParams }: Props) {
                           ) : (
                             <span className="text-gray-300 text-xs">—</span>
                           )}
-                          {pedido.transportista === 'CTT Express' && pedido.trackingNumber && (
-                            <TrackingRefresh pedidoId={pedido.id} />
+                          {(!pedido.transportista || pedido.transportista === 'CTT Express') && (
+                            <TrackingRefresh pedidoId={pedido.id} tieneTracking={!!pedido.trackingNumber} />
                           )}
                         </div>
                       </td>

@@ -265,6 +265,51 @@ export async function getCTTTracking(shippingCode: string): Promise<CTTTrackingR
   }
 }
 
+export interface CTTTrackingByReferenceResult {
+  shippingCode: string
+  estado: string
+  entregado: boolean
+}
+
+// Busca un envío por la referencia de cliente (p.ej. el pedido de Amazon) cuando no
+// tenemos el número de envío guardado. Usa el endpoint "Shipments Tracking List by Dates",
+// que solo permite filtrar por client_center_code + rango de fechas, así que se filtra
+// el resultado en cliente por client_references.
+export async function getCTTTrackingByReference(
+  reference: string,
+  desde: Date
+): Promise<CTTTrackingByReferenceResult | null> {
+  const { token, cfg } = await getCTTToken()
+  const { apiBase } = getCTTUrls(cfg.sandbox)
+
+  const fmt = (d: Date) => d.toISOString().slice(0, 10)
+  const dateFrom = new Date(desde)
+  dateFrom.setDate(dateFrom.getDate() - 1)
+  const dateTo = new Date()
+
+  const url = `${apiBase}/integrations/trf/web-tracking/v1.0/shippings?page_limit=100&page_offsets=1&mapping_table_code=APITRACK&order_by=-shipping_date&client_center_code=${encodeURIComponent(cfg.clientCenterCode)}&shipping_date=${fmt(dateFrom)}[range]${fmt(dateTo)}`
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  if (!res.ok) throw new Error(`CTT tracking by dates (${res.status}): ${await res.text()}`)
+
+  const json = await res.json()
+  const shipments: Array<{ shipping_code: string; shipping_status_code: string; client_references?: string[] }> = json?.data ?? []
+  const match = shipments.find(s => s.client_references?.includes(reference))
+  if (!match) return null
+
+  const codigo = String(parseInt(match.shipping_status_code, 10))
+  const estado = CTT_STATUS_LABELS[codigo] ?? 'Sin información'
+
+  return {
+    shippingCode: match.shipping_code,
+    estado,
+    entregado: CTT_STATUS_ENTREGADO.has(codigo),
+  }
+}
+
 export async function getCTTLabel(shippingCode: string): Promise<Uint8Array> {
   const { token, cfg } = await getCTTToken()
   const { apiBase } = getCTTUrls(cfg.sandbox)

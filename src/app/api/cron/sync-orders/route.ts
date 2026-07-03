@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getAmazonConfig } from '@/lib/config'
 import { getAccessToken, getRecentUnshippedOrders, getOrderItems, getOrderAddress } from '@/lib/spapi'
 import { syncStockForCuenta } from '@/lib/syncStock'
+import { syncTrackingForCuenta } from '@/lib/syncTracking'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
@@ -36,6 +37,7 @@ export async function GET(req: NextRequest) {
   const syncStartedAt = new Date().toISOString()
 
   let totalCreados = 0
+  let totalActualizados = 0
   const allErrors: string[] = []
 
   for (const cuenta of cuentas) {
@@ -104,6 +106,9 @@ export async function GET(req: NextRequest) {
           allErrors.push(`${order.AmazonOrderId}: ${msg}`)
         }
       }
+      const { actualizados } = await syncTrackingForCuenta(accessToken, cuenta.marketplaceId, cuenta.clienteId, cuenta.isSandbox)
+      totalActualizados += actualizados
+
       await syncStockForCuenta(accessToken, cuenta.sellerId, cuenta.marketplaceId, cuenta.clienteId, cuenta.isSandbox)
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
@@ -118,6 +123,6 @@ export async function GET(req: NextRequest) {
     create: { clave: 'cron_last_sync_at', valor: syncStartedAt },
   })
 
-  console.log(`[cron/sync-orders] since=${since.toISOString()} creados=${totalCreados} errores=${allErrors.length}`)
-  return NextResponse.json({ ok: true, since: since.toISOString(), totalCreados, errores: allErrors.slice(0, 10) })
+  console.log(`[cron/sync-orders] since=${since.toISOString()} creados=${totalCreados} actualizados=${totalActualizados} errores=${allErrors.length}`)
+  return NextResponse.json({ ok: true, since: since.toISOString(), totalCreados, totalActualizados, errores: allErrors.slice(0, 10) })
 }

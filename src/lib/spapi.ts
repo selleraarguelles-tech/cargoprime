@@ -221,6 +221,34 @@ export async function getOrderAddress(
   }
 }
 
+export interface OrderPackage {
+  trackingNumber?: string
+  carrier?: string
+  shippingService?: string
+  packageStatus?: { status: string; detailedStatus?: string }
+  shipTime?: string
+}
+
+export async function getOrderPackages(
+  accessToken: string,
+  marketplaceId: string,
+  orderId: string,
+  sandbox = false
+): Promise<OrderPackage[]> {
+  try {
+    const data = await spCall(
+      accessToken,
+      marketplaceId,
+      `/orders/2026-01-01/orders/${orderId}`,
+      { includedData: 'PACKAGES' },
+      sandbox
+    )
+    return data.order?.packages ?? data.payload?.packages ?? data.packages ?? []
+  } catch {
+    return []
+  }
+}
+
 export async function getListingStock(
   accessToken: string,
   sellerId: string,

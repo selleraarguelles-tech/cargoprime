@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import Link from 'next/link'
 import Badge from '@/components/Badge'
-import { ESTADOS_PEDIDO, formatDate } from '@/lib/utils'
+import { ESTADOS_PEDIDO, ESTADOS_TRACKING, formatDate } from '@/lib/utils'
 import { Plus, Search, Tag } from 'lucide-react'
 import PedidosFilters from './PedidosFilters'
 import EstadoSelector from './EstadoSelector'
@@ -73,13 +73,15 @@ export default async function PedidosPage({ searchParams }: Props) {
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Producto</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Seguimiento</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado envío</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Etiqueta</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {pedidos.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
                     <Search className="w-8 h-8 mx-auto mb-2 opacity-30" />
                     No se encontraron pedidos con los filtros aplicados
                   </td>
@@ -99,6 +101,26 @@ export default async function PedidosPage({ searchParams }: Props) {
                       <td className="px-4 py-3 text-gray-500 text-xs">{formatDate(pedido.createdAt)}</td>
                       <td className="px-4 py-3">
                         <EstadoSelector pedidoId={pedido.id} estadoActual={pedido.estado} isAdmin={isAdmin} />
+                      </td>
+                      <td className="px-4 py-3 text-xs">
+                        {pedido.trackingNumber ? (
+                          <>
+                            <p className="font-mono text-gray-900">{pedido.trackingNumber}</p>
+                            {pedido.transportista && <p className="text-gray-400">{pedido.transportista}</p>}
+                          </>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {pedido.trackingEstado ? (
+                          (() => {
+                            const trackingInfo = ESTADOS_TRACKING[pedido.trackingEstado]
+                            return <Badge variant={trackingInfo?.variant ?? 'default'}>{trackingInfo?.label ?? pedido.trackingEstado}</Badge>
+                          })()
+                        ) : (
+                          <span className="text-gray-300 text-xs">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <Link href={`/etiquetas/${pedido.id}`} className="inline-flex items-center gap-1.5 text-xs text-orange-600 hover:text-orange-700 font-medium">

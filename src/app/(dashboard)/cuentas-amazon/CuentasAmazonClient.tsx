@@ -34,6 +34,7 @@ interface SyncResult {
   ok: boolean
   totalAmazon: number
   creados: number
+  actualizados: number
   omitidos: number
   errores: string[]
 }
@@ -130,7 +131,7 @@ function CuentasAmazonInner({ cuentas: initial, clientes, configured }: Props) {
     const data = await res.json()
     setSyncResult({ id, result: data })
     setSyncLoading(null)
-    if (res.ok && data.creados > 0) router.refresh()
+    if (res.ok && (data.creados > 0 || data.actualizados > 0)) router.refresh()
   }
 
   const inputClass = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
@@ -281,6 +282,7 @@ function CuentasAmazonInner({ cuentas: initial, clientes, configured }: Props) {
                 <p className="text-green-700 mt-0.5">
                   {syncResult.result.totalAmazon} pedidos en Amazon ·{' '}
                   <strong>{syncResult.result.creados} nuevos importados</strong> ·{' '}
+                  {syncResult.result.actualizados} con tracking actualizado ·{' '}
                   {syncResult.result.omitidos} ya existían
                 </p>
                 {syncResult.result.errores.length > 0 && (

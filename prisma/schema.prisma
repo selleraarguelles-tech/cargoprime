@@ -73,6 +73,7 @@ model Pedido {
   peso                  Float?
   transportista         String?
   trackingNumber        String?
+  trackingEstado        String?
   estado                String   @default("sin_etiqueta")
   createdAt             DateTime @default(now())
   cliente               Cliente  @relation(fields: [clienteId], references: [id])

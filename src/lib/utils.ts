@@ -7,6 +7,7 @@ export const ESTADOS_PEDIDO: Record<EstadoPedido, { label: string; variant: 'dan
 }
 
 export const ESTADOS_TRACKING: Record<string, { label: string; variant: 'danger' | 'warning' | 'success' | 'default' }> = {
+  // Amazon Orders API (includedData=PACKAGES)
   SHIPPED: { label: 'Enviado', variant: 'success' },
   IN_TRANSIT: { label: 'En tránsito', variant: 'warning' },
   OUT_FOR_DELIVERY: { label: 'En reparto', variant: 'warning' },
@@ -14,6 +15,20 @@ export const ESTADOS_TRACKING: Record<string, { label: string; variant: 'danger'
   UNDELIVERABLE: { label: 'No entregable', variant: 'danger' },
   RETURNING: { label: 'En devolución', variant: 'danger' },
   RETURNED: { label: 'Devuelto', variant: 'danger' },
+  // CTT Express (Get Shipping Tracking API)
+  'Manifestado o grabado': { label: 'Manifestado', variant: 'default' },
+  'Envío recogido': { label: 'Recogido', variant: 'warning' },
+  'En tránsito': { label: 'En tránsito', variant: 'warning' },
+  'En reparto': { label: 'En reparto', variant: 'warning' },
+  'Entregado': { label: 'Entregado', variant: 'success' },
+  'Entregado almacén regulador': { label: 'Entregado', variant: 'success' },
+  'Entrega parcial': { label: 'Entrega parcial', variant: 'warning' },
+  'Reparto fallido': { label: 'Reparto fallido', variant: 'danger' },
+  'Recogida fallida': { label: 'Recogida fallida', variant: 'danger' },
+  'Recogida anulada': { label: 'Recogida anulada', variant: 'danger' },
+  'Envío anulado': { label: 'Envío anulado', variant: 'danger' },
+  'Devolución': { label: 'Devolución', variant: 'danger' },
+  'Mal transitado': { label: 'Incidencia en tránsito', variant: 'danger' },
 }
 
 export function formatDate(date: string | Date) {

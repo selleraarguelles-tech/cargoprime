@@ -6,6 +6,7 @@ import { ESTADOS_PEDIDO, ESTADOS_TRACKING, formatDate } from '@/lib/utils'
 import { Plus, Search, Tag } from 'lucide-react'
 import PedidosFilters from './PedidosFilters'
 import EstadoSelector from './EstadoSelector'
+import TrackingRefresh from './TrackingRefresh'
 
 export const dynamic = 'force-dynamic'
 
@@ -113,14 +114,19 @@ export default async function PedidosPage({ searchParams }: Props) {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        {pedido.trackingEstado ? (
-                          (() => {
-                            const trackingInfo = ESTADOS_TRACKING[pedido.trackingEstado]
-                            return <Badge variant={trackingInfo?.variant ?? 'default'}>{trackingInfo?.label ?? pedido.trackingEstado}</Badge>
-                          })()
-                        ) : (
-                          <span className="text-gray-300 text-xs">—</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {pedido.trackingEstado ? (
+                            (() => {
+                              const trackingInfo = ESTADOS_TRACKING[pedido.trackingEstado]
+                              return <Badge variant={trackingInfo?.variant ?? 'default'}>{trackingInfo?.label ?? pedido.trackingEstado}</Badge>
+                            })()
+                          ) : (
+                            <span className="text-gray-300 text-xs">—</span>
+                          )}
+                          {pedido.transportista === 'CTT Express' && pedido.trackingNumber && (
+                            <TrackingRefresh pedidoId={pedido.id} />
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <Link href={`/etiquetas/${pedido.id}`} className="inline-flex items-center gap-1.5 text-xs text-orange-600 hover:text-orange-700 font-medium">

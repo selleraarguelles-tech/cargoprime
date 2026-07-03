@@ -182,6 +182,89 @@ export async function createCTTShipment(pedido: PedidoForCTT): Promise<string> {
   return shippingCode
 }
 
+interface CTTTrackingEvent {
+  code: string
+  description: string
+  type: string
+  event_date: string
+}
+
+export interface CTTTrackingResult {
+  estado: string
+  entregado: boolean
+  fechaEntrega?: string
+  ultimoEvento?: string
+  eventos: CTTTrackingEvent[]
+}
+
+// Tabla oficial de estados CTT Express (STATUS_INCIDENTS_MANAGEMENTS.xlsx, hoja STATUS)
+const CTT_STATUS_LABELS: Record<string, string> = {
+  '0': 'Manifestado o grabado',
+  '10': 'Recepción provisional',
+  '20': 'Pendiente de depositar en punto CTT',
+  '30': 'Depositado en punto pendiente de recoger',
+  '300': 'Recogida asignada',
+  '400': 'Recogida anulada',
+  '500': 'Envío recogido',
+  '600': 'Recogida fallida',
+  '700': 'Delegación de origen',
+  '900': 'En tránsito',
+  '1000': 'Delegación de tránsito',
+  '1100': 'Mal transitado',
+  '1200': 'Delegación destino',
+  '1500': 'En reparto',
+  '1600': 'Reparto fallido',
+  '1700': 'Envío estacionado',
+  '1800': 'Estacionado ubicado',
+  '1900': 'Pendiente de extracción',
+  '2100': 'Entregado',
+  '2200': 'Entrega parcial',
+  '2300': 'Depositado en punto CTT',
+  '2310': 'Disponible en punto CTT para entrega',
+  '2400': 'Nuevo reparto',
+  '2500': 'Devolución',
+  '2600': 'Reexpedición',
+  '2700': 'Entregado almacén regulador',
+  '2900': 'Recoger en delegación',
+  '3000': 'Envío anulado',
+  '3900': 'Tránsito internacional',
+  '3901': 'Gestión aduanera',
+  '3902': 'Despachado',
+  '3903': 'Revisión aduanera',
+  '3904': 'Inspección aduanera',
+}
+
+const CTT_STATUS_ENTREGADO = new Set(['2100', '2700'])
+
+export async function getCTTTracking(shippingCode: string): Promise<CTTTrackingResult> {
+  const { token, cfg } = await getCTTToken()
+  const { apiBase } = getCTTUrls(cfg.sandbox)
+
+  const url = `${apiBase}/integrations-info/trf/item-history-api/history/${encodeURIComponent(shippingCode)}?view=APITRACK&showItems=false`
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  if (!res.ok) throw new Error(`CTT tracking (${res.status}): ${await res.text()}`)
+
+  const json = await res.json()
+  const events: CTTTrackingEvent[] = json?.data?.shipping_history?.events ?? []
+  const statusEvents = events.filter(e => e.type === 'STATUS')
+  const ultimo = statusEvents[statusEvents.length - 1] ?? events[events.length - 1]
+  // CTT devuelve el código con padding (p.ej. "0000", "0900"); se normaliza para el lookup
+  const codigo = ultimo ? String(parseInt(ultimo.code, 10)) : undefined
+  const estado = (codigo && CTT_STATUS_LABELS[codigo]) || ultimo?.description || 'Sin información'
+
+  return {
+    estado,
+    entregado: Boolean(codigo && CTT_STATUS_ENTREGADO.has(codigo)),
+    fechaEntrega: json?.data?.delivery_date,
+    ultimoEvento: estado,
+    eventos: events,
+  }
+}
+
 export async function getCTTLabel(shippingCode: string): Promise<Uint8Array> {
   const { token, cfg } = await getCTTToken()
   const { apiBase } = getCTTUrls(cfg.sandbox)

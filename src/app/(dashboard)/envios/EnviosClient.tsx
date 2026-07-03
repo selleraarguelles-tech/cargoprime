@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, RefreshCw, ExternalLink, Trash2, Package, ChevronDown, ChevronUp, X } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
@@ -37,11 +37,17 @@ interface Props {
   clientes: Cliente[]
   transportistas: Record<string, { label: string }>
   isAdmin: boolean
+  filters?: ReactNode
+  hasActiveFilters?: boolean
 }
 
-export default function EnviosClient({ envios: initial, clientes, transportistas, isAdmin }: Props) {
+export default function EnviosClient({ envios: initial, clientes, transportistas, isAdmin, filters, hasActiveFilters }: Props) {
   const router = useRouter()
   const [envios, setEnvios] = useState(initial)
+
+  useEffect(() => {
+    setEnvios(initial)
+  }, [initial])
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [trackingData, setTrackingData] = useState<Record<number, TrackingResult>>({})
@@ -111,6 +117,8 @@ export default function EnviosClient({ envios: initial, clientes, transportistas
           </button>
         )}
       </div>
+
+      {filters}
 
       {/* Formulario nuevo envío */}
       {showForm && (
@@ -192,8 +200,10 @@ export default function EnviosClient({ envios: initial, clientes, transportistas
       {envios.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
           <Package className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">No hay envíos registrados</p>
-          {isAdmin && <p className="text-gray-400 text-xs mt-1">Haz clic en "Nuevo envío" para registrar el primer envío</p>}
+          <p className="text-gray-500 text-sm">
+            {hasActiveFilters ? 'No se encontraron envíos con los filtros aplicados' : 'No hay envíos registrados'}
+          </p>
+          {isAdmin && !hasActiveFilters && <p className="text-gray-400 text-xs mt-1">Haz clic en "Nuevo envío" para registrar el primer envío</p>}
         </div>
       ) : (
         <div className="space-y-3">

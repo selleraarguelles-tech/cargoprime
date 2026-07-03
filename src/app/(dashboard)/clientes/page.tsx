@@ -20,8 +20,8 @@ export default async function ClientesPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
-          <p className="text-gray-500 text-sm mt-1">{clientes.length} cliente{clientes.length !== 1 ? 's' : ''} registrado{clientes.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-xl font-bold text-gray-900">Clientes</h1>
+          <p className="text-gray-500 text-sm mt-0.5">{clientes.length} cliente{clientes.length !== 1 ? 's' : ''} registrado{clientes.length !== 1 ? 's' : ''}</p>
         </div>
         {isAdmin && (
           <Link href="/clientes/nuevo" className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -33,7 +33,7 @@ export default async function ClientesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {clientes.length === 0 ? (
-          <div className="col-span-3 bg-white rounded-xl shadow-sm border border-gray-100 py-16 text-center">
+          <div className="col-span-3 bg-white rounded-xl shadow-sm border border-[#e4e8f0] py-16 text-center">
             <Users className="w-10 h-10 text-gray-200 mx-auto mb-3" />
             <p className="text-gray-400">No hay clientes todavía</p>
             {isAdmin && (
@@ -44,7 +44,7 @@ export default async function ClientesPage() {
           </div>
         ) : (
           clientes.map((cliente) => (
-            <div key={cliente.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+            <div key={cliente.id} className="bg-white rounded-xl shadow-sm border border-[#e4e8f0] p-5 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-3">
                 <div className="bg-orange-100 rounded-lg p-2.5">
                   <Users className="w-5 h-5 text-orange-600" />

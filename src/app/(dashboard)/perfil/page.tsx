@@ -54,7 +54,7 @@ export default function PerfilPage() {
   return (
     <div className="p-6 space-y-6 max-w-lg">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Mi perfil</h1>
+        <h1 className="text-xl font-bold text-gray-900">Mi perfil</h1>
         <p className="text-gray-500 text-sm mt-1">Información de tu cuenta y seguridad</p>
       </div>
 

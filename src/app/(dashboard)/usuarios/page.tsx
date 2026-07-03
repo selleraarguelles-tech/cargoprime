@@ -25,7 +25,7 @@ export default async function UsuariosPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Gestión de usuarios</h1>
+        <h1 className="text-xl font-bold text-gray-900">Gestión de usuarios</h1>
         <p className="text-gray-500 text-sm mt-1">{usuarios.length} usuario{usuarios.length !== 1 ? 's' : ''} registrado{usuarios.length !== 1 ? 's' : ''}</p>
       </div>
 

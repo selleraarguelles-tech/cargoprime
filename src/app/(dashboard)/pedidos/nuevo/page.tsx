@@ -17,7 +17,7 @@ export default async function NuevoPedidoPage() {
   return (
     <div className="p-6 max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Nuevo pedido</h1>
+        <h1 className="text-xl font-bold text-gray-900">Nuevo pedido</h1>
         <p className="text-gray-500 text-sm mt-1">Registra un nuevo pedido de Amazon FBM</p>
       </div>
       <NuevoPedidoForm clientes={clientes} />

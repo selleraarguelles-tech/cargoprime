@@ -85,7 +85,7 @@ export default function CuentasShopifyClient({ cuentas: initial, clientes }: Pro
     <div className="p-6 space-y-6 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Cuentas Shopify</h1>
+          <h1 className="text-xl font-bold text-gray-900">Cuentas Shopify</h1>
           <p className="text-gray-500 text-sm mt-1">Conecta las tiendas Shopify de tus clientes para sincronizar pedidos</p>
         </div>
         <button
@@ -110,7 +110,7 @@ export default function CuentasShopifyClient({ cuentas: initial, clientes }: Pro
       </div>
 
       {cuentas.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
+        <div className="bg-white rounded-xl border border-[#e4e8f0] shadow-sm p-12 text-center">
           <div className="bg-green-100 rounded-full p-4 w-16 h-16 flex items-center justify-center mx-auto mb-4">
             <Store className="w-8 h-8 text-green-700" />
           </div>
@@ -118,15 +118,15 @@ export default function CuentasShopifyClient({ cuentas: initial, clientes }: Pro
           <p className="text-sm text-gray-500">Añade tu primera tienda Shopify para empezar a sincronizar pedidos.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-white rounded-xl shadow-sm border border-[#e4e8f0] overflow-hidden">
+          <table className="w-full text-sm tbl-head tbl-zebra">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Tienda</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Dominio</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Cliente</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Añadida</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Tienda</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Dominio</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Cliente</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Añadida</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">

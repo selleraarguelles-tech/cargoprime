@@ -98,7 +98,7 @@ function CuentasTikTokInner({ cuentas: initial, clientes, configured }: Props) {
     <div className="p-6 space-y-6 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Cuentas TikTok Shop</h1>
+          <h1 className="text-xl font-bold text-gray-900">Cuentas TikTok Shop</h1>
           <p className="text-gray-500 text-sm mt-1">Conecta tus tiendas de TikTok Shop para sincronizar pedidos</p>
         </div>
         {configured && (
@@ -139,7 +139,7 @@ function CuentasTikTokInner({ cuentas: initial, clientes, configured }: Props) {
       )}
 
       {cuentas.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
+        <div className="bg-white rounded-xl border border-[#e4e8f0] shadow-sm p-12 text-center">
           <div className="bg-gray-100 rounded-full p-4 w-16 h-16 flex items-center justify-center mx-auto mb-4">
             <Music2 className="w-8 h-8 text-gray-700" />
           </div>
@@ -147,15 +147,15 @@ function CuentasTikTokInner({ cuentas: initial, clientes, configured }: Props) {
           <p className="text-sm text-gray-500">Conecta tu primera tienda de TikTok Shop para empezar a sincronizar pedidos.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-white rounded-xl shadow-sm border border-[#e4e8f0] overflow-hidden">
+          <table className="w-full text-sm tbl-head tbl-zebra">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Tienda</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Shop ID</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Cliente</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Añadida</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Tienda</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Shop ID</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Cliente</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Añadida</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">

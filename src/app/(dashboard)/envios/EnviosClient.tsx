@@ -104,7 +104,7 @@ export default function EnviosClient({ envios: initial, clientes, transportistas
     <div className="p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Envíos entrantes</h1>
+          <h1 className="text-xl font-bold text-gray-900">Envíos entrantes</h1>
           <p className="text-sm text-gray-500 mt-1">Seguimiento de mercancía en camino al almacén</p>
         </div>
         {isAdmin && (

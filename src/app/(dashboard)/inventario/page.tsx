@@ -28,8 +28,8 @@ export default async function InventarioPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inventario</h1>
-          <p className="text-gray-500 text-sm mt-1">{productos.length} productos · {bajosMinimo.length} bajo mínimos</p>
+          <h1 className="text-xl font-bold text-gray-900">Inventario</h1>
+          <p className="text-gray-500 text-sm mt-0.5">{productos.length} productos · {bajosMinimo.length} bajo mínimos</p>
         </div>
         {isAdmin && <EntradaStockModal productos={productos.map(p => ({ id: p.id, nombre: p.nombre, sku: p.sku, clienteNombre: p.cliente.nombre }))} />}
       </div>
@@ -55,30 +55,30 @@ export default async function InventarioPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Tabla productos */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-[#e4e8f0] overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
             <Package className="w-4 h-4 text-gray-400" />
             <h2 className="font-semibold text-gray-900">Stock por producto</h2>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto max-h-[calc(100vh-360px)]">
+            <table className="w-full text-sm tbl-head tbl-zebra">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">SKU</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Producto</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cliente</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Mínimo</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">SKU</th>
+                  <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Producto</th>
+                  <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Cliente</th>
+                  <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Stock</th>
+                  <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Mínimo</th>
+                  <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Estado</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody>
                 {productos.map((producto) => {
                   const bajo = producto.stockActual <= producto.stockMinimo
                   const sinStock = producto.stockActual === 0
                   return (
-                    <tr key={producto.id} className={`hover:bg-gray-50 transition-colors ${bajo ? 'bg-orange-50/30' : ''}`}>
-                      <td className="px-4 py-3 font-mono text-xs text-gray-600">{producto.sku}</td>
+                    <tr key={producto.id} className={`border-b border-gray-50 transition-colors ${bajo ? '!bg-orange-50/50' : ''}`}>
+                      <td className="px-4 py-3 font-mono text-xs text-slate-600">{producto.sku}</td>
                       <td className="px-4 py-3 font-medium text-gray-900">{producto.nombre}</td>
                       <td className="px-4 py-3 text-gray-500 text-xs">{producto.cliente.nombre}</td>
                       <td className="px-4 py-3 text-right">
@@ -105,7 +105,7 @@ export default async function InventarioPage() {
         </div>
 
         {/* Historial movimientos */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl shadow-sm border border-[#e4e8f0]">
           <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-gray-400" />
             <h2 className="font-semibold text-gray-900">Últimos movimientos</h2>

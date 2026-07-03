@@ -38,7 +38,7 @@ export default async function EditarClientePage({ params }: Props) {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{cliente.nombre}</h1>
+          <h1 className="text-xl font-bold text-gray-900">{cliente.nombre}</h1>
           <p className="text-gray-500 text-sm mt-1">Cliente desde {formatDate(cliente.createdAt)}</p>
         </div>
         <CopiarEnlaceButton clienteId={cliente.id} />

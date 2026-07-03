@@ -145,7 +145,7 @@ function CuentasAmazonInner({ cuentas: initial, clientes, configured }: Props) {
     <div className="p-6 space-y-6 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Cuentas Amazon</h1>
+          <h1 className="text-xl font-bold text-gray-900">Cuentas Amazon</h1>
           <p className="text-gray-500 text-sm mt-1">Conecta tus cuentas de Seller Central para sincronizar pedidos y etiquetas</p>
         </div>
         <div className="flex gap-2">
@@ -198,7 +198,7 @@ function CuentasAmazonInner({ cuentas: initial, clientes, configured }: Props) {
       )}
 
       {cuentas.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
+        <div className="bg-white rounded-xl border border-[#e4e8f0] shadow-sm p-12 text-center">
           <div className="bg-orange-100 rounded-full p-4 w-16 h-16 flex items-center justify-center mx-auto mb-4">
             <ShoppingBag className="w-8 h-8 text-orange-600" />
           </div>
@@ -206,16 +206,16 @@ function CuentasAmazonInner({ cuentas: initial, clientes, configured }: Props) {
           <p className="text-sm text-gray-500">Conecta tu primera cuenta de Amazon Seller Central para empezar a sincronizar pedidos.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-white rounded-xl shadow-sm border border-[#e4e8f0] overflow-hidden">
+          <table className="w-full text-sm tbl-head tbl-zebra">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Cuenta</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Seller ID</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Marketplace</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Cliente</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Añadida</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Cuenta</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Seller ID</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Marketplace</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Cliente</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Añadida</th>
+                <th className="text-left px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -302,7 +302,7 @@ function CuentasAmazonInner({ cuentas: initial, clientes, configured }: Props) {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-[#e4e8f0] p-6">
         <h3 className="font-semibold text-gray-900 mb-4">¿Cómo funciona?</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[

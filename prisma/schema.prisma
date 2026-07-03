@@ -15,6 +15,8 @@ model Cliente {
   productos      Producto[]
   pedidos        Pedido[]
   cuentasAmazon  CuentaAmazon[]
+  cuentasTikTok  CuentaTikTok[]
+  cuentasShopify CuentaShopify[]
   envios         Envio[]
 }
 
@@ -47,6 +49,32 @@ model CuentaAmazon {
   cliente       Cliente   @relation(fields: [clienteId], references: [id])
 }
 
+model CuentaTikTok {
+  id           Int      @id @default(autoincrement())
+  nombre       String
+  shopId       String   @unique
+  shopCipher   String?
+  clienteId    Int
+  accessToken  String
+  refreshToken String
+  activo       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  cliente      Cliente  @relation(fields: [clienteId], references: [id])
+}
+
+model CuentaShopify {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  shopDomain  String   @unique
+  clienteId   Int
+  accessToken String
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+}
+
 model Producto {
   id           Int               @id @default(autoincrement())
   sku          String            @unique
@@ -63,6 +91,7 @@ model Producto {
 model Pedido {
   id                    Int      @id @default(autoincrement())
   amazonOrderId         String   @unique
+  canal                 String   @default("amazon")
   clienteId             Int
   productoId            Int
   destinatarioNombre    String

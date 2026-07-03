@@ -17,7 +17,9 @@ const CTT_KEYS = [
   'ctt_sender_town', 'ctt_sender_country_code', 'ctt_sender_email', 'ctt_sender_phone',
 ]
 
-const ALL_KEYS = [...AMAZON_KEYS, ...CTT_KEYS]
+const TIKTOK_KEYS = ['tiktok_app_key', 'tiktok_app_secret', 'tiktok_redirect_uri']
+
+const ALL_KEYS = [...AMAZON_KEYS, ...CTT_KEYS, ...TIKTOK_KEYS]
 
 export async function GET() {
   const session = await auth()
@@ -32,12 +34,16 @@ export async function GET() {
   const config: Record<string, string> = {}
   rows.forEach(r => { config[r.clave] = r.valor })
 
-  // Auto-suggest redirect URI based on request host
+  // Auto-suggest redirect URIs based on request host
+  const hdrs = await headers()
+  const host = hdrs.get('host') ?? 'localhost:3000'
+  const proto = host.includes('localhost') ? 'http' : 'https'
+
   if (!config.amazon_redirect_uri) {
-    const hdrs = await headers()
-    const host = hdrs.get('host') ?? 'localhost:3000'
-    const proto = host.includes('localhost') ? 'http' : 'https'
     config.amazon_redirect_uri_suggestion = `${proto}://${host}/api/amazon/callback`
+  }
+  if (!config.tiktok_redirect_uri) {
+    config.tiktok_redirect_uri_suggestion = `${proto}://${host}/api/tiktok/callback`
   }
 
   return NextResponse.json(config)

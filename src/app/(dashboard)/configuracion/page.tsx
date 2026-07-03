@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Settings, ShoppingBag, CheckCircle, AlertCircle, ExternalLink, Copy, Eye, EyeOff, Truck } from 'lucide-react'
+import { Settings, ShoppingBag, CheckCircle, AlertCircle, ExternalLink, Copy, Eye, EyeOff, Truck, Music2, Store } from 'lucide-react'
 
 export default function ConfiguracionPage() {
   const [form, setForm] = useState({
@@ -22,6 +22,9 @@ export default function ConfiguracionPage() {
     ctt_sender_country_code: 'ES',
     ctt_sender_email: '',
     ctt_sender_phone: '',
+    tiktok_app_key: '',
+    tiktok_app_secret: '',
+    tiktok_redirect_uri: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -29,6 +32,7 @@ export default function ConfiguracionPage() {
   const [error, setError] = useState('')
   const [showSecret, setShowSecret] = useState(false)
   const [uriSuggestion, setUriSuggestion] = useState('')
+  const [tiktokUriSuggestion, setTiktokUriSuggestion] = useState('')
 
   useEffect(() => {
     fetch('/api/configuracion')
@@ -52,8 +56,12 @@ export default function ConfiguracionPage() {
           ctt_sender_country_code: data.ctt_sender_country_code ?? 'ES',
           ctt_sender_email: data.ctt_sender_email ?? '',
           ctt_sender_phone: data.ctt_sender_phone ?? '',
+          tiktok_app_key: data.tiktok_app_key ?? '',
+          tiktok_app_secret: data.tiktok_app_secret ?? '',
+          tiktok_redirect_uri: data.tiktok_redirect_uri ?? data.tiktok_redirect_uri_suggestion ?? '',
         }))
         if (data.amazon_redirect_uri_suggestion) setUriSuggestion(data.amazon_redirect_uri_suggestion)
+        if (data.tiktok_redirect_uri_suggestion) setTiktokUriSuggestion(data.tiktok_redirect_uri_suggestion)
         setLoading(false)
       })
   }, [])
@@ -236,6 +244,123 @@ export default function ConfiguracionPage() {
               </div>
             </form>
           )}
+        </div>
+      </div>
+
+      {/* TikTok Shop */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+          <div className="bg-gray-100 rounded-lg p-2">
+            <Music2 className="w-5 h-5 text-gray-700" />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-semibold text-gray-900">TikTok Shop</h2>
+            <p className="text-xs text-gray-500">Credenciales de tu app del TikTok Shop Partner Center</p>
+          </div>
+          {form.tiktok_app_key && form.tiktok_app_secret && (
+            <span className="flex items-center gap-1.5 text-xs text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
+              <CheckCircle className="w-3.5 h-3.5" /> Configurado
+            </span>
+          )}
+        </div>
+        <div className="px-6 pt-5 pb-4">
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
+            <p className="text-sm font-semibold text-blue-900 mb-3">Cómo obtener las credenciales</p>
+            <ol className="space-y-2 text-sm text-blue-800">
+              <li className="flex gap-2">
+                <span className="font-bold shrink-0">1.</span>
+                <span>
+                  Entra en{' '}
+                  <a href="https://partner.tiktokshop.com" target="_blank" rel="noreferrer"
+                    className="underline font-medium inline-flex items-center gap-1">
+                    TikTok Shop Partner Center
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  {' '}y crea una app
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-bold shrink-0">2.</span>
+                <span>Copia el <strong>App Key</strong> y el <strong>App Secret</strong> de tu app</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-bold shrink-0">3.</span>
+                <span>
+                  Añade esta URL de redirección en la configuración de la app:
+                  {tiktokUriSuggestion && (
+                    <span className="flex items-center gap-2 mt-1">
+                      <code className="bg-blue-100 text-blue-900 px-2 py-0.5 rounded text-xs">{tiktokUriSuggestion}</code>
+                      <button onClick={() => copyToClipboard(tiktokUriSuggestion)} className="text-blue-600 hover:text-blue-800">
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  )}
+                </span>
+              </li>
+            </ol>
+          </div>
+
+          {!loading && (
+            <form onSubmit={handleSave} className="space-y-4">
+              <div>
+                <label className={labelClass}>App Key</label>
+                <input
+                  value={form.tiktok_app_key}
+                  onChange={e => setForm(f => ({ ...f, tiktok_app_key: e.target.value }))}
+                  placeholder="6abc123def456..."
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>App Secret</label>
+                <div className="relative">
+                  <input
+                    type={showSecret ? 'text' : 'password'}
+                    value={form.tiktok_app_secret}
+                    onChange={e => setForm(f => ({ ...f, tiktok_app_secret: e.target.value }))}
+                    placeholder="••••••••••••••••••••••••••••••••"
+                    className={`${inputClass} pr-10`}
+                  />
+                  <button type="button" onClick={() => setShowSecret(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg">
+                  <AlertCircle className="w-4 h-4 shrink-0" />{error}
+                </div>
+              )}
+              {saved && (
+                <div className="flex items-center gap-2 bg-green-50 text-green-700 text-sm px-3 py-2 rounded-lg">
+                  <CheckCircle className="w-4 h-4 shrink-0" />Configuración guardada correctamente
+                </div>
+              )}
+
+              <div className="flex justify-end pt-1">
+                <button type="submit" disabled={saving} className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg disabled:opacity-60 transition-colors">
+                  {saving ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+
+      {/* Shopify */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center gap-3">
+          <div className="bg-green-100 rounded-lg p-2">
+            <Store className="w-5 h-5 text-green-700" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-gray-900">Shopify</h2>
+            <p className="text-xs text-gray-500">
+              No requiere configuración global: cada tienda se conecta desde{' '}
+              <a href="/cuentas-shopify" className="underline font-medium">Cuentas Shopify</a> con su propio Access Token.
+            </p>
+          </div>
         </div>
       </div>
 

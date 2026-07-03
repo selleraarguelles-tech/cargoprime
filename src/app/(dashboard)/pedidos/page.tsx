@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import Link from 'next/link'
 import Badge from '@/components/Badge'
-import { ESTADOS_PEDIDO, ESTADOS_TRACKING, formatDate } from '@/lib/utils'
+import { ESTADOS_PEDIDO, ESTADOS_TRACKING, CANALES, formatDate } from '@/lib/utils'
 import { Plus, Search, Tag } from 'lucide-react'
 import PedidosFilters from './PedidosFilters'
 import EstadoSelector from './EstadoSelector'
@@ -68,7 +68,8 @@ export default async function PedidosPage({ searchParams }: Props) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Pedido Amazon</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nº Pedido</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Canal</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cliente</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Destinatario</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Producto</th>
@@ -82,7 +83,7 @@ export default async function PedidosPage({ searchParams }: Props) {
             <tbody className="divide-y divide-gray-50">
               {pedidos.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={10} className="px-4 py-12 text-center text-gray-400">
                     <Search className="w-8 h-8 mx-auto mb-2 opacity-30" />
                     No se encontraron pedidos con los filtros aplicados
                   </td>
@@ -93,6 +94,12 @@ export default async function PedidosPage({ searchParams }: Props) {
                   return (
                     <tr key={pedido.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3 font-mono text-xs font-medium text-gray-900">{pedido.amazonOrderId}</td>
+                      <td className="px-4 py-3">
+                        {(() => {
+                          const canalInfo = CANALES[pedido.canal]
+                          return <Badge variant={canalInfo?.variant ?? 'default'}>{canalInfo?.label ?? pedido.canal}</Badge>
+                        })()}
+                      </td>
                       <td className="px-4 py-3 text-gray-700">{pedido.cliente.nombre}</td>
                       <td className="px-4 py-3">
                         <p className="font-medium text-gray-900">{pedido.destinatarioNombre}</p>

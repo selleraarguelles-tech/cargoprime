@@ -34,3 +34,22 @@ export async function getAmazonConfig(): Promise<{
     isConfigured: !!(appId && clientId && clientSecret && redirectUri),
   }
 }
+
+export async function getTikTokConfig(): Promise<{
+  appKey: string | null
+  appSecret: string | null
+  redirectUri: string | null
+  isConfigured: boolean
+}> {
+  const [appKey, appSecret, redirectUri] = await Promise.all([
+    getConfig('tiktok_app_key'),
+    getConfig('tiktok_app_secret'),
+    getConfig('tiktok_redirect_uri'),
+  ])
+  return {
+    appKey,
+    appSecret,
+    redirectUri,
+    isConfigured: !!(appKey && appSecret && redirectUri),
+  }
+}

@@ -1,5 +1,11 @@
 export type EstadoPedido = 'sin_etiqueta' | 'preparando' | 'enviado'
 
+export const CANALES: Record<string, { label: string; variant: 'default' | 'orange' | 'info' }> = {
+  amazon: { label: 'Amazon', variant: 'orange' },
+  tiktok: { label: 'TikTok Shop', variant: 'default' },
+  shopify: { label: 'Shopify', variant: 'info' },
+}
+
 export const ESTADOS_PEDIDO: Record<EstadoPedido, { label: string; variant: 'danger' | 'warning' | 'success' }> = {
   sin_etiqueta: { label: 'Sin etiqueta', variant: 'danger' },
   preparando: { label: 'Preparando', variant: 'warning' },

@@ -18,6 +18,8 @@ import {
   Eye,
   ShoppingBag,
   Truck,
+  Music2,
+  Store,
 } from 'lucide-react'
 
 interface SidebarUser {
@@ -41,6 +43,8 @@ const navItems = [
 
 const adminItems = [
   { href: '/cuentas-amazon', label: 'Cuentas Amazon', icon: ShoppingBag },
+  { href: '/cuentas-tiktok', label: 'Cuentas TikTok Shop', icon: Music2 },
+  { href: '/cuentas-shopify', label: 'Cuentas Shopify', icon: Store },
   { href: '/usuarios', label: 'Usuarios', icon: Settings },
   { href: '/configuracion', label: 'Configuración', icon: SlidersHorizontal },
 ]

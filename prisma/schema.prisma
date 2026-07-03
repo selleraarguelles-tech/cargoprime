@@ -80,12 +80,13 @@ model Producto {
   sku          String            @unique
   nombre       String
   clienteId    Int
-  stockActual  Int               @default(0)
-  stockMinimo  Int               @default(5)
-  createdAt    DateTime          @default(now())
-  cliente      Cliente           @relation(fields: [clienteId], references: [id])
-  pedidos      Pedido[]
-  movimientos  MovimientoStock[]
+  stockActual         Int               @default(0)
+  stockMinimo         Int               @default(50)
+  notificadoStockBajo Boolean           @default(false)
+  createdAt           DateTime          @default(now())
+  cliente             Cliente           @relation(fields: [clienteId], references: [id])
+  pedidos             Pedido[]
+  movimientos         MovimientoStock[]
 }
 
 model Pedido {

@@ -80,7 +80,6 @@ export async function GET(req: NextRequest) {
                 nombre: firstItem.Title.slice(0, 100),
                 clienteId: cuenta.clienteId,
                 stockActual: 0,
-                stockMinimo: 0,
               },
             })
           }

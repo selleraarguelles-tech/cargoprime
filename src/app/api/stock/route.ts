@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
+import { evaluarAlertaStock } from '@/lib/stockAlert'
 
 export async function POST(req: NextRequest) {
   const session = await auth()
@@ -24,6 +25,9 @@ export async function POST(req: NextRequest) {
       where: { id: parseInt(productoId) },
       data: { stockActual: tipoMovimiento === 'entrada' ? { increment: qty } : { decrement: qty } },
     })
+
+    // Aviso al cliente si el movimiento deja el stock en/por debajo del mínimo (o lo recupera)
+    await evaluarAlertaStock(updated.id)
 
     return NextResponse.json(updated, { status: 201 })
   } catch {

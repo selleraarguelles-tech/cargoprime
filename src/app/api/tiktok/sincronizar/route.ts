@@ -54,7 +54,6 @@ export async function POST(req: NextRequest) {
               nombre: firstItem.product_name.slice(0, 100),
               clienteId: cuenta.clienteId,
               stockActual: 0,
-              stockMinimo: 0,
             },
           })
         }

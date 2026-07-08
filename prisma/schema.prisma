@@ -105,6 +105,7 @@ model Pedido {
   trackingNumber        String?
   trackingEstado        String?
   estado                String   @default("sin_etiqueta")
+  enviadoAt             DateTime?
   createdAt             DateTime @default(now())
   cliente               Cliente  @relation(fields: [clienteId], references: [id])
   producto              Producto @relation(fields: [productoId], references: [id])

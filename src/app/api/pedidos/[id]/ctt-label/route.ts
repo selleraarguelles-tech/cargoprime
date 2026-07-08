@@ -32,6 +32,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
         trackingNumber: shippingCode,
         transportista: 'CTT Express',
         estado: pedido.estado === 'sin_etiqueta' ? 'preparando' : pedido.estado,
+        enviadoAt: new Date(), // arranca el reloj de entrega (+36h) al generar la etiqueta
       },
     })
 

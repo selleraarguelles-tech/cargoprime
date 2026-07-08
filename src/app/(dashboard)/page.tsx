@@ -40,8 +40,8 @@ async function getMetrics() {
       select: { createdAt: true, canal: true },
     }),
     prisma.pedido.findMany({
-      where: { trackingEstado: { not: null } },
-      select: { trackingEstado: true },
+      where: { trackingNumber: { not: null } },
+      select: { trackingEstado: true, enviadoAt: true, createdAt: true },
     }),
   ])
 
@@ -68,12 +68,15 @@ async function getMetrics() {
   for (const p of pedidos30d) porCanal.set(p.canal, (porCanal.get(p.canal) ?? 0) + 1)
 
   // Estado de los envíos con tracking
-  let entregados = 0, incidencias = 0, enCurso = 0
+  const CERRADOS = new Set([...TRACKING_ENTREGADO, 'Devolución', 'Reexpedición', 'Envío anulado', 'RETURNED', 'No encontrado en CTT'])
+  const limite36h = Date.now() - 36 * 60 * 60 * 1000
+  let entregados = 0, incidencias = 0, enCurso = 0, retrasados36h = 0
   for (const p of conTracking) {
-    const e = p.trackingEstado!
-    if (TRACKING_ENTREGADO.has(e)) entregados++
-    else if (TRACKING_INCIDENCIA.has(e)) incidencias++
+    const e = p.trackingEstado
+    if (e && TRACKING_ENTREGADO.has(e)) entregados++
+    else if (e && TRACKING_INCIDENCIA.has(e)) incidencias++
     else enCurso++
+    if (!CERRADOS.has(e ?? '') && (p.enviadoAt ?? p.createdAt).getTime() < limite36h) retrasados36h++
   }
 
   return {
@@ -83,7 +86,7 @@ async function getMetrics() {
     dias,
     porCanal: [...porCanal.entries()].sort((a, b) => b[1] - a[1]),
     total30d: pedidos30d.length,
-    tracking: { entregados, incidencias, enCurso, total: conTracking.length },
+    tracking: { entregados, incidencias, enCurso, total: conTracking.length, retrasados36h },
   }
 }
 
@@ -131,6 +134,24 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </div>
+
+      {/* Casilla roja: envíos con más de 36h sin entregar */}
+      {m.tracking.retrasados36h > 0 && (
+        <Link href="/seguimiento?retraso=1">
+          <div className="bg-red-50 border border-red-300 rounded-xl p-4 flex items-center gap-3 hover:shadow-md transition-shadow">
+            <div className="bg-red-500 rounded-lg p-2.5 shrink-0">
+              <Clock className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-red-800">
+                {m.tracking.retrasados36h} envío{m.tracking.retrasados36h !== 1 ? 's llevan' : ' lleva'} más de 36 horas sin entregarse
+              </p>
+              <p className="text-xs text-red-600 mt-0.5">Revisa qué ha pasado con cada uno en Seguimiento</p>
+            </div>
+            <span className="text-sm font-medium text-red-700 shrink-0">Revisar →</span>
+          </div>
+        </Link>
+      )}
 
       {/* Gráficas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

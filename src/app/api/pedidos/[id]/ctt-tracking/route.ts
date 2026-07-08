@@ -36,6 +36,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
         transportista: 'CTT Express',
         trackingEstado: encontrado.estado,
         estado: 'enviado',
+        enviadoAt: pedido.enviadoAt ?? new Date(),
       },
     })
 

@@ -33,6 +33,7 @@ export async function syncTrackingForCuenta(
         transportista: carrier ?? pedido.transportista,
         trackingEstado: pkg.packageStatus?.status ?? null,
         estado: 'enviado',
+        enviadoAt: pkg.shipTime ? new Date(pkg.shipTime) : new Date(),
       },
     })
     actualizados++

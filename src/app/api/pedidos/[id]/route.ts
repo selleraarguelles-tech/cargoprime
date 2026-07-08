@@ -15,6 +15,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     const data: Record<string, unknown> = {}
     if (estado) data.estado = estado
+    if (estado === 'enviado') data.enviadoAt = new Date() // arranca el reloj de entrega (+36h)
     if (trackingNumber !== undefined) data.trackingNumber = trackingNumber
     if (transportista !== undefined) data.transportista = transportista
 

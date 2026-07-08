@@ -18,7 +18,11 @@ export async function GET(_req: NextRequest, { params }: Params) {
       const result = await getCTTTracking(pedido.trackingNumber)
       await prisma.pedido.update({
         where: { id: pedido.id },
-        data: { trackingEstado: result.estado },
+        data: {
+          trackingEstado: result.estado,
+          ...(result.entregadoEn ? { entregadoAt: new Date(result.entregadoEn) } : {}),
+          ...(result.expedidoEn ? { enviadoAt: new Date(result.expedidoEn) } : {}),
+        },
       })
       return NextResponse.json(result)
     }

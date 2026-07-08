@@ -193,6 +193,10 @@ export interface CTTTrackingResult {
   estado: string
   entregado: boolean
   fechaEntrega?: string
+  /** Fecha/hora exacta del evento de entrega (ISO), si el envío está entregado */
+  entregadoEn?: string
+  /** Fecha/hora del primer evento (manifestado/expedición), si existe */
+  expedidoEn?: string
   ultimoEvento?: string
   eventos: CTTTrackingEvent[]
 }
@@ -261,10 +265,16 @@ export async function getCTTTracking(shippingCode: string): Promise<CTTTrackingR
   const codigo = ultimo ? String(parseInt(ultimo.code, 10)) : undefined
   const estado = (codigo && CTT_STATUS_LABELS[codigo]) || ultimo?.description || 'Sin información'
 
+  // Evento de entrega (2100 Entregado / 2700 Entregado almacén regulador) y primer evento (expedición)
+  const eventoEntrega = statusEvents.find(e => CTT_STATUS_ENTREGADO.has(String(parseInt(e.code, 10))))
+  const primerEvento = statusEvents[0] ?? events[0]
+
   return {
     estado,
     entregado: Boolean(codigo && CTT_STATUS_ENTREGADO.has(codigo)),
     fechaEntrega: json?.data?.delivery_date,
+    entregadoEn: eventoEntrega?.event_date,
+    expedidoEn: primerEvento?.event_date,
     ultimoEvento: estado,
     eventos: events,
   }

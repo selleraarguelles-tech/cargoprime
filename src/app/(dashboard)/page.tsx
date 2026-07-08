@@ -1,8 +1,9 @@
 import { prisma } from '@/lib/prisma'
-import { ShoppingCart, AlertTriangle, Package, Users, Clock, TrendingUp, Truck, CheckCircle2, BarChart3 } from 'lucide-react'
+import { ShoppingCart, AlertTriangle, Package, Clock, TrendingUp, Truck, CheckCircle2, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 import Badge from '@/components/Badge'
 import { ESTADOS_PEDIDO, CANALES, formatDateTime } from '@/lib/utils'
+import { entregadoEnPlazo } from '@/lib/sla'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,7 +25,7 @@ async function getMetrics() {
   const hace7 = new Date(today); hace7.setDate(hace7.getDate() - 7)
   const hace30 = new Date(today); hace30.setDate(hace30.getDate() - 29)
 
-  const [pedidosHoy, sinEtiqueta, enviados7d, clientesActivos, ultimosPedidos, productosLista, pedidos30d, conTracking] = await Promise.all([
+  const [pedidosHoy, sinEtiqueta, enviados7d, clientesActivos, ultimosPedidos, productosLista, pedidos30d, conTracking, entregas30d] = await Promise.all([
     prisma.pedido.count({ where: { createdAt: { gte: today, lt: tomorrow } } }),
     prisma.pedido.count({ where: { estado: 'sin_etiqueta' } }),
     prisma.pedido.count({ where: { estado: 'enviado', createdAt: { gte: hace7 } } }),
@@ -42,6 +43,10 @@ async function getMetrics() {
     prisma.pedido.findMany({
       where: { trackingNumber: { not: null } },
       select: { trackingEstado: true, enviadoAt: true, createdAt: true },
+    }),
+    prisma.pedido.findMany({
+      where: { entregadoAt: { gte: hace30 }, enviadoAt: { not: null } },
+      select: { enviadoAt: true, entregadoAt: true },
     }),
   ])
 
@@ -79,6 +84,13 @@ async function getMetrics() {
     if (!CERRADOS.has(e ?? '') && (p.enviadoAt ?? p.createdAt).getTime() < limite36h) retrasados36h++
   }
 
+  // Entrega en plazo (30 días): etiqueta antes de las 14:00 → entrega el siguiente día laborable
+  let enPlazo = 0
+  for (const p of entregas30d) {
+    if (entregadoEnPlazo(p.enviadoAt!, p.entregadoAt!)) enPlazo++
+  }
+  const pctEnPlazo = entregas30d.length > 0 ? Math.round((enPlazo / entregas30d.length) * 100) : null
+
   return {
     pedidosHoy, sinEtiqueta, enviados7d, clientesActivos, ultimosPedidos,
     stockBajo: productosStockBajo.length,
@@ -87,6 +99,7 @@ async function getMetrics() {
     porCanal: [...porCanal.entries()].sort((a, b) => b[1] - a[1]),
     total30d: pedidos30d.length,
     tracking: { entregados, incidencias, enCurso, total: conTracking.length, retrasados36h },
+    sla: { pctEnPlazo, evaluadas: entregas30d.length },
   }
 }
 
@@ -100,7 +113,14 @@ export default async function DashboardPage() {
     { label: 'Enviados (7 días)', value: m.enviados7d, icon: Truck, color: 'bg-teal-500', href: '/pedidos?estado=enviado' },
     { label: 'Incidencias de envío', value: m.tracking.incidencias, icon: AlertTriangle, color: m.tracking.incidencias > 0 ? 'bg-red-500' : 'bg-green-500', href: '/pedidos', alert: m.tracking.incidencias > 0 },
     { label: 'Stock bajo mínimos', value: m.stockBajo, icon: Package, color: m.stockBajo > 0 ? 'bg-orange-500' : 'bg-green-500', href: '/inventario', alert: m.stockBajo > 0 },
-    { label: 'Clientes activos', value: m.clientesActivos, icon: Users, color: 'bg-purple-500', href: '/clientes' },
+    {
+      label: `Entrega en plazo (${m.sla.evaluadas} env.)`,
+      value: m.sla.pctEnPlazo !== null ? `${m.sla.pctEnPlazo}%` : '—',
+      icon: CheckCircle2,
+      color: m.sla.pctEnPlazo === null ? 'bg-gray-400' : m.sla.pctEnPlazo >= 95 ? 'bg-green-500' : m.sla.pctEnPlazo >= 85 ? 'bg-amber-500' : 'bg-red-500',
+      href: '/reportes',
+      alert: m.sla.pctEnPlazo !== null && m.sla.pctEnPlazo < 85,
+    },
   ]
 
   const canalColor: Record<string, string> = { amazon: 'bg-orange-400', tiktok: 'bg-gray-800', shopify: 'bg-green-500' }

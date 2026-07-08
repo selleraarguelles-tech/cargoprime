@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { Download, FileSpreadsheet, BarChart3 } from 'lucide-react'
 import ReportesFilters from './ReportesFilters'
 import { CANALES } from '@/lib/utils'
+import { entregadoEnPlazo } from '@/lib/sla'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,16 +46,16 @@ export default async function ReportesPage({ searchParams }: Props) {
     prisma.cliente.findMany({ orderBy: { nombre: 'asc' }, select: { id: true, nombre: true } }),
     prisma.pedido.findMany({
       where,
-      select: { clienteId: true, canal: true, estado: true, trackingEstado: true },
+      select: { clienteId: true, canal: true, estado: true, trackingEstado: true, enviadoAt: true, entregadoAt: true },
     }),
     prisma.envio.groupBy({ by: ['clienteId'], where: whereEnvios, _count: { id: true } }),
   ])
 
   // Resumen por cliente
-  interface Resumen { total: number; sinEtiqueta: number; preparando: number; enviados: number; entregados: number; incidencias: number; envios: number }
+  interface Resumen { total: number; sinEtiqueta: number; preparando: number; enviados: number; entregados: number; incidencias: number; envios: number; evaluables: number; enPlazo: number }
   const resumen = new Map<number, Resumen>()
   const get = (id: number) => {
-    if (!resumen.has(id)) resumen.set(id, { total: 0, sinEtiqueta: 0, preparando: 0, enviados: 0, entregados: 0, incidencias: 0, envios: 0 })
+    if (!resumen.has(id)) resumen.set(id, { total: 0, sinEtiqueta: 0, preparando: 0, enviados: 0, entregados: 0, incidencias: 0, envios: 0, evaluables: 0, enPlazo: 0 })
     return resumen.get(id)!
   }
   for (const p of pedidos) {
@@ -65,6 +66,10 @@ export default async function ReportesPage({ searchParams }: Props) {
     else if (p.estado === 'enviado') r.enviados++
     if (p.trackingEstado && TRACKING_ENTREGADO.has(p.trackingEstado)) r.entregados++
     if (p.trackingEstado && TRACKING_INCIDENCIA.has(p.trackingEstado)) r.incidencias++
+    if (p.enviadoAt && p.entregadoAt) {
+      r.evaluables++
+      if (entregadoEnPlazo(p.enviadoAt, p.entregadoAt)) r.enPlazo++
+    }
   }
   for (const e of envios) get(e.clienteId).envios = e._count.id
 
@@ -78,10 +83,12 @@ export default async function ReportesPage({ searchParams }: Props) {
       total: acc.total + r.total, sinEtiqueta: acc.sinEtiqueta + r.sinEtiqueta,
       preparando: acc.preparando + r.preparando, enviados: acc.enviados + r.enviados,
       entregados: acc.entregados + r.entregados, incidencias: acc.incidencias + r.incidencias,
-      envios: acc.envios + r.envios,
+      envios: acc.envios + r.envios, evaluables: acc.evaluables + r.evaluables, enPlazo: acc.enPlazo + r.enPlazo,
     }),
-    { total: 0, sinEtiqueta: 0, preparando: 0, enviados: 0, entregados: 0, incidencias: 0, envios: 0 }
+    { total: 0, sinEtiqueta: 0, preparando: 0, enviados: 0, entregados: 0, incidencias: 0, envios: 0, evaluables: 0, enPlazo: 0 }
   )
+
+  const pct = (enPlazo: number, evaluables: number) => evaluables > 0 ? `${Math.round((enPlazo / evaluables) * 100)}%` : '—'
 
   const qs = new URLSearchParams({ desde, hasta })
   if (cliente) qs.set('cliente', cliente)
@@ -135,13 +142,14 @@ export default async function ReportesPage({ searchParams }: Props) {
                 <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Enviados</th>
                 <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Entregados</th>
                 <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Incidencias</th>
+                <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider" title="Entregas dentro del siguiente día laborable (corte 14:00, sin fines de semana)">% en plazo</th>
                 <th className="text-right px-4 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Envíos entrantes</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filas.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
                     <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-30" />
                     Sin actividad en el período seleccionado
                   </td>
@@ -157,6 +165,10 @@ export default async function ReportesPage({ searchParams }: Props) {
                       <td className="px-4 py-3 text-right text-gray-600">{r.enviados}</td>
                       <td className="px-4 py-3 text-right text-green-600">{r.entregados}</td>
                       <td className={`px-4 py-3 text-right ${r.incidencias > 0 ? 'text-red-600 font-medium' : 'text-gray-400'}`}>{r.incidencias}</td>
+                      <td className={`px-4 py-3 text-right font-medium ${r.evaluables === 0 ? 'text-gray-400' : (r.enPlazo / r.evaluables) >= 0.95 ? 'text-green-600' : (r.enPlazo / r.evaluables) >= 0.85 ? 'text-amber-600' : 'text-red-600'}`}>
+                        {pct(r.enPlazo, r.evaluables)}
+                        {r.evaluables > 0 && <span className="text-gray-400 font-normal"> ({r.enPlazo}/{r.evaluables})</span>}
+                      </td>
                       <td className="px-4 py-3 text-right text-gray-600">{r.envios}</td>
                     </tr>
                   ))}
@@ -168,6 +180,7 @@ export default async function ReportesPage({ searchParams }: Props) {
                     <td className="px-4 py-3 text-right text-gray-700">{totales.enviados}</td>
                     <td className="px-4 py-3 text-right text-green-700">{totales.entregados}</td>
                     <td className="px-4 py-3 text-right text-red-700">{totales.incidencias}</td>
+                    <td className="px-4 py-3 text-right text-gray-900">{pct(totales.enPlazo, totales.evaluables)}</td>
                     <td className="px-4 py-3 text-right text-gray-700">{totales.envios}</td>
                   </tr>
                 </>

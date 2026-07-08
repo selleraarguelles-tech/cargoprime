@@ -205,24 +205,22 @@ export async function sendReclamacionCTT(to: string, cc: string, d: DatosReclama
       ${cabeceraCargoPrime()}
       <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: 0; border-radius: 0 0 8px 8px;">
         <p style="color: #374151; margin: 0 0 16px;">Buenas,</p>
-        <p style="color: #374151; margin: 0 0 20px;">
-          Somos <strong>CargoPrime, S.L.</strong> (codigo de cliente <strong>4671400001</strong>).
-          Os escribimos en relacion con el siguiente envio, que supera las <strong>36 horas</strong> desde su
-          expedicion sin que conste la entrega:
+        <p style="color: #111827; margin: 0 0 20px; font-size: 15px;">
+          El siguiente envio lleva <strong>mas de 36 horas expedido y sigue sin entregarse</strong>:
         </p>
-        <table style="width: 100%; font-size: 14px; background: #f8fafc; border-radius: 8px; padding: 8px; margin: 0 0 20px;">
+        <table style="width: 100%; font-size: 14px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; margin: 0 0 20px;">
           <tr><td style="padding: 6px 12px; color: #6b7280;">Numero de envio</td><td style="padding: 6px 12px; font-family: monospace; font-weight: bold;">${d.tracking}</td></tr>
-          <tr><td style="padding: 6px 12px; color: #6b7280;">Referencia del pedido</td><td style="padding: 6px 12px; font-family: monospace;">${d.referencia}</td></tr>
-          <tr><td style="padding: 6px 12px; color: #6b7280;">Fecha de expedicion</td><td style="padding: 6px 12px;">${d.expedido}</td></tr>
-          <tr><td style="padding: 6px 12px; color: #6b7280;">Ultimo estado registrado</td><td style="padding: 6px 12px; font-weight: bold; color: #ea580c;">${d.estadoActual}</td></tr>
+          <tr><td style="padding: 6px 12px; color: #6b7280;">Referencia</td><td style="padding: 6px 12px; font-family: monospace;">${d.referencia}</td></tr>
+          <tr><td style="padding: 6px 12px; color: #6b7280;">Expedido</td><td style="padding: 6px 12px;">${d.expedido}</td></tr>
+          <tr><td style="padding: 6px 12px; color: #6b7280;">Ultimo estado</td><td style="padding: 6px 12px; font-weight: bold; color: #dc2626;">${d.estadoActual}</td></tr>
           <tr><td style="padding: 6px 12px; color: #6b7280;">Destino</td><td style="padding: 6px 12px;">${d.destino}</td></tr>
         </table>
-        <p style="color: #374151; margin: 0 0 16px;">
-          Podeis indicarnos el <strong>motivo por el que no se ha entregado</strong> y cuando esta prevista
-          la entrega o el siguiente intento?
-        </p>
-        <p style="color: #374151; margin: 0;">Quedamos a la espera de vuestra respuesta. Gracias.</p>
-        <p style="color: #374151; margin: 16px 0 0;">Un saludo,<br/><strong>CargoPrime, S.L.</strong> | Logistica de calidad</p>
+        <p style="color: #111827; margin: 0 0 8px;">Necesitamos que nos indiqueis <strong>hoy mismo</strong>:</p>
+        <ol style="color: #111827; margin: 0 0 20px; padding-left: 20px;">
+          <li style="margin-bottom: 4px;">El motivo del retraso.</li>
+          <li>La fecha y franja prevista de entrega o del siguiente intento.</li>
+        </ol>
+        <p style="color: #374151; margin: 0;">Responded a <strong>info@cargoprime.es</strong>.</p>
         ${PIE_CARGOPRIME}
       </div>
     </div>`
@@ -232,8 +230,9 @@ export async function sendReclamacionCTT(to: string, cc: string, d: DatosReclama
     from,
     to,
     cc,
-    subject: `Consulta estado de envio ${d.tracking} - sin entrega tras +36h (cliente 4671400001)`,
+    replyTo: 'info@cargoprime.es',
+    subject: `URGENTE: Envio ${d.tracking} sin entregar - +36h desde expedicion`,
     html,
-    text: `Buenas,\n\nSomos CargoPrime, S.L. (codigo de cliente 4671400001). El siguiente envio supera las 36 horas desde su expedicion sin que conste la entrega:\n\nNumero de envio: ${d.tracking}\nReferencia: ${d.referencia}\nFecha de expedicion: ${d.expedido}\nUltimo estado: ${d.estadoActual}\nDestino: ${d.destino}\n\nPodeis indicarnos el motivo por el que no se ha entregado y cuando esta prevista la entrega o el siguiente intento?\n\nGracias. Un saludo,\nCargoPrime, S.L. | info@cargoprime.es | 692 38 33 53`,
+    text: `Buenas,\n\nEl siguiente envio lleva mas de 36 horas expedido y sigue sin entregarse:\n\nNumero de envio: ${d.tracking}\nReferencia: ${d.referencia}\nExpedido: ${d.expedido}\nUltimo estado: ${d.estadoActual}\nDestino: ${d.destino}\n\nNecesitamos que nos indiqueis hoy mismo:\n1. El motivo del retraso.\n2. La fecha y franja prevista de entrega o del siguiente intento.\n\nResponded a info@cargoprime.es.\n\nCargoPrime, S.L. | Logistica de calidad | 692 38 33 53`,
   })
 }

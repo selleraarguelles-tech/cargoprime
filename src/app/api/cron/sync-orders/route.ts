@@ -5,6 +5,7 @@ import { getAmazonConfig } from '@/lib/config'
 import { getAccessToken, getRecentUnshippedOrders, getOrderItems, getOrderAddress } from '@/lib/spapi'
 import { syncStockForCuenta } from '@/lib/syncStock'
 import { syncTrackingForCuenta } from '@/lib/syncTracking'
+import { refreshCttTrackingPendientes } from '@/lib/refreshCttTracking'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
@@ -115,6 +116,14 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Refrescar el estado real de los envíos CTT aún en curso (pasa a Entregado/Incidencia solo)
+  let ctt = { revisados: 0, actualizados: 0, errores: 0 }
+  try {
+    ctt = await refreshCttTrackingPendientes()
+  } catch (e: unknown) {
+    allErrors.push(`CTT tracking: ${e instanceof Error ? e.message : String(e)}`)
+  }
+
   // Persist the sync start time so next run picks up from here
   await prisma.configuracion.upsert({
     where: { clave: 'cron_last_sync_at' },
@@ -122,6 +131,6 @@ export async function GET(req: NextRequest) {
     create: { clave: 'cron_last_sync_at', valor: syncStartedAt },
   })
 
-  console.log(`[cron/sync-orders] since=${since.toISOString()} creados=${totalCreados} actualizados=${totalActualizados} errores=${allErrors.length}`)
-  return NextResponse.json({ ok: true, since: since.toISOString(), totalCreados, totalActualizados, errores: allErrors.slice(0, 10) })
+  console.log(`[cron/sync-orders] since=${since.toISOString()} creados=${totalCreados} actualizados=${totalActualizados} cttRevisados=${ctt.revisados} cttActualizados=${ctt.actualizados} errores=${allErrors.length}`)
+  return NextResponse.json({ ok: true, since: since.toISOString(), totalCreados, totalActualizados, cttTracking: ctt, errores: allErrors.slice(0, 10) })
 }

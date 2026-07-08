@@ -179,7 +179,7 @@ export default async function SeguimientoPage({ searchParams }: Props) {
                           : <span className="text-gray-400 text-xs">Sin datos</span>}
                       </td>
                       <td className="px-4 py-3">
-                        {pedido.transportista === 'CTT Express'
+                        {pedido.transportista && /ctt/i.test(pedido.transportista)
                           ? <TrackingRefresh pedidoId={pedido.id} tieneTracking={!!pedido.trackingNumber} />
                           : <span className="text-gray-300 text-xs">—</span>}
                       </td>

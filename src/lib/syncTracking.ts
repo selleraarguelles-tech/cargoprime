@@ -23,11 +23,14 @@ export async function syncTrackingForCuenta(
     const pkg = packages.find(p => p.trackingNumber)
     if (!pkg) continue
 
+    // Amazon devuelve "CTTExpress"; se normaliza al nombre usado por la app
+    const carrier = pkg.carrier && /ctt/i.test(pkg.carrier) ? 'CTT Express' : pkg.carrier
+
     await prisma.pedido.update({
       where: { id: pedido.id },
       data: {
         trackingNumber: pkg.trackingNumber,
-        transportista: pkg.carrier ?? pedido.transportista,
+        transportista: carrier ?? pedido.transportista,
         trackingEstado: pkg.packageStatus?.status ?? null,
         estado: 'enviado',
       },

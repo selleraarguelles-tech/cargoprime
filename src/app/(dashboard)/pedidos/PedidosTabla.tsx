@@ -189,7 +189,7 @@ export default function PedidosTabla({ pedidos, isAdmin, estadoActivo, conteos }
                             const ti = ESTADOS_TRACKING[pedido.trackingEstado!]
                             return <Badge variant={ti?.variant ?? 'default'}>{ti?.label ?? pedido.trackingEstado}</Badge>
                           })() : <span className="text-gray-300 text-xs">—</span>}
-                          {(!pedido.transportista || pedido.transportista === 'CTT Express') && (
+                          {(!pedido.transportista || /ctt/i.test(pedido.transportista)) && (
                             <TrackingRefresh pedidoId={pedido.id} tieneTracking={!!pedido.trackingNumber} />
                           )}
                         </div>

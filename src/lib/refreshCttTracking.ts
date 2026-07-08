@@ -16,14 +16,15 @@ export async function refreshCttTrackingPendientes(limit = 100): Promise<{ revis
 
   const pedidos = await prisma.pedido.findMany({
     where: {
-      transportista: 'CTT Express',
+      // Amazon devuelve el carrier como "CTTExpress" (sin espacio); la app usa "CTT Express"
+      transportista: { in: ['CTT Express', 'CTTExpress'] },
       trackingNumber: { not: null },
       createdAt: { gte: hace60dias },
       OR: [{ trackingEstado: null }, { trackingEstado: { notIn: FINALES } }],
     },
     orderBy: { createdAt: 'desc' },
     take: limit,
-    select: { id: true, trackingNumber: true, trackingEstado: true },
+    select: { id: true, trackingNumber: true, trackingEstado: true, transportista: true },
   })
 
   let actualizados = 0
@@ -33,9 +34,12 @@ export async function refreshCttTrackingPendientes(limit = 100): Promise<{ revis
     await sleep(150) // margen holgado frente al límite de CTT (~30 req/s)
     try {
       const t = await getCTTTracking(pedido.trackingNumber!)
-      if (t.estado && t.estado !== pedido.trackingEstado) {
-        await prisma.pedido.update({ where: { id: pedido.id }, data: { trackingEstado: t.estado } })
-        actualizados++
+      const data: { trackingEstado?: string; transportista?: string } = {}
+      if (t.estado && t.estado !== pedido.trackingEstado) data.trackingEstado = t.estado
+      if (pedido.transportista === 'CTTExpress') data.transportista = 'CTT Express' // normalizar
+      if (Object.keys(data).length > 0) {
+        await prisma.pedido.update({ where: { id: pedido.id }, data })
+        if (data.trackingEstado) actualizados++
       }
     } catch (e) {
       errores++

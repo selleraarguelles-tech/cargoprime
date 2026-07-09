@@ -9,6 +9,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const session = await auth()
   if (!session) redirect('/login')
 
+  // Los sellers no acceden al panel interno: se les lleva a su portal.
+  if (session.user?.role === 'seller') redirect('/portal')
+
   const isAdmin = session.user?.role === 'admin'
   const user = {
     name: session.user?.name ?? '',

@@ -12,6 +12,7 @@ export const authConfig = {
         token.role = (user as { role: string }).role
         token.username = (user as { username: string }).username
         token.id = user.id as string
+        token.clienteId = (user as { clienteId: number | null }).clienteId ?? null
       }
       return token
     },
@@ -20,6 +21,7 @@ export const authConfig = {
         session.user.id = token.id as string
         session.user.role = token.role as string
         session.user.username = token.username as string
+        session.user.clienteId = (token.clienteId as number | null) ?? null
       }
       return session
     },

@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { username, nombre, email, rol, password } = await req.json()
+    const { username, nombre, email, rol, password, clienteId } = await req.json()
     if (!username || !nombre || !email || !password) {
       return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 })
     }
@@ -18,9 +18,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'La contraseña debe tener al menos 6 caracteres' }, { status: 400 })
     }
 
+    const rolFinal = rol || 'readonly'
+    if (rolFinal === 'seller' && !clienteId) {
+      return NextResponse.json({ error: 'Un usuario seller debe tener un cliente asignado' }, { status: 400 })
+    }
+
     const hashed = await bcrypt.hash(password, 10)
     const user = await prisma.user.create({
-      data: { username, nombre, email, rol: rol || 'readonly', password: hashed },
+      data: {
+        username, nombre, email, rol: rolFinal, password: hashed,
+        clienteId: rolFinal === 'seller' ? Number(clienteId) : null,
+      },
     })
 
     const { password: _, ...userSafe } = user

@@ -24,6 +24,8 @@ import {
   ChevronLeft,
   PackageCheck,
   Radar,
+  Receipt,
+  TrendingUp,
 } from 'lucide-react'
 
 interface SidebarUser {
@@ -80,6 +82,8 @@ const groups: NavGroup[] = [
     label: 'Administración',
     admin: true,
     items: [
+      { href: '/rentabilidad', label: 'Rentabilidad', icon: TrendingUp },
+      { href: '/facturacion', label: 'Facturación', icon: Receipt },
       { href: '/usuarios', label: 'Usuarios', icon: Settings },
       { href: '/configuracion', label: 'Configuración', icon: SlidersHorizontal },
     ],
@@ -173,10 +177,13 @@ export default function Sidebar({ user }: Props) {
               </div>
             </div>
             <div className="flex gap-1">
-              <Link href="/perfil" className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg text-xs text-slate-300 hover:bg-[#172136] hover:text-white transition-colors">
+              <Link href="/perfil" className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs text-slate-300 hover:bg-[#172136] hover:text-white transition-colors">
                 <UserCircle className="w-4 h-4" /> Perfil
               </Link>
-              <button onClick={() => signOut({ callbackUrl: '/login' })} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg text-xs text-slate-300 hover:bg-red-500/15 hover:text-red-300 transition-colors">
+              <Link href="/seguridad" title="Seguridad (2FA)" className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs transition-colors ${isActive('/seguridad') ? 'bg-[#1c2942] text-white' : 'text-slate-300 hover:bg-[#172136] hover:text-white'}`}>
+                <ShieldCheck className="w-4 h-4" /> Seguridad
+              </Link>
+              <button onClick={() => signOut({ callbackUrl: '/login' })} className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs text-slate-300 hover:bg-red-500/15 hover:text-red-300 transition-colors">
                 <LogOut className="w-4 h-4" /> Salir
               </button>
             </div>

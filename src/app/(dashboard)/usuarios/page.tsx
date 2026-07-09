@@ -9,18 +9,24 @@ export default async function UsuariosPage() {
   const session = await auth()
   if (session?.user?.role !== 'admin') redirect('/')
 
-  const usuarios = await prisma.user.findMany({
-    orderBy: { createdAt: 'desc' },
-    select: {
-      id: true,
-      username: true,
-      nombre: true,
-      email: true,
-      rol: true,
-      activo: true,
-      createdAt: true,
-    },
-  })
+  const [usuarios, clientes] = await Promise.all([
+    prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        username: true,
+        nombre: true,
+        email: true,
+        rol: true,
+        activo: true,
+        createdAt: true,
+        twoFactorEnabled: true,
+        clienteId: true,
+        cliente: { select: { nombre: true } },
+      },
+    }),
+    prisma.cliente.findMany({ orderBy: { nombre: 'asc' }, select: { id: true, nombre: true } }),
+  ])
 
   return (
     <div className="p-6 space-y-6">
@@ -30,6 +36,7 @@ export default async function UsuariosPage() {
       </div>
 
       <UsuariosClient
+        clientes={clientes}
         usuarios={usuarios.map(u => ({
           id: u.id,
           username: u.username,
@@ -38,6 +45,9 @@ export default async function UsuariosPage() {
           rol: u.rol,
           activo: u.activo,
           createdAt: u.createdAt.toISOString(),
+          twoFactorEnabled: u.twoFactorEnabled,
+          clienteId: u.clienteId,
+          clienteNombre: u.cliente?.nombre ?? null,
         }))}
       />
     </div>

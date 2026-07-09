@@ -3,7 +3,7 @@
 import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Boxes, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { Boxes, Eye, EyeOff, AlertCircle, ShieldCheck, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 function LoginForm() {
@@ -11,31 +11,66 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') ?? '/'
 
+  const [step, setStep] = useState<'cred' | 'code'>('cred')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [code, setCode] = useState('')
   const [showPwd, setShowPwd] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Crea la sesión con NextAuth (con o sin código 2FA).
+  async function entrar(codigo?: string) {
+    const result = await signIn('credentials', {
+      email,
+      password,
+      code: codigo ?? '',
+      redirect: false,
+      callbackUrl,
+    })
+    if (result?.error) {
+      setError(codigo ? 'Código incorrecto' : 'Email o contraseña incorrectos')
+      setLoading(false)
+      return
+    }
+    router.push(callbackUrl)
+    router.refresh()
+  }
+
+  // Paso 1: validar credenciales y decidir si hace falta el segundo paso.
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    const result = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
-      callbackUrl,
+    const res = await fetch('/api/auth/precheck', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
     })
+    const data = await res.json().catch(() => ({ ok: false }))
 
-    if (result?.error) {
+    if (!res.ok || !data.ok) {
       setError('Email o contraseña incorrectos')
       setLoading(false)
-    } else {
-      router.push(callbackUrl)
-      router.refresh()
+      return
     }
+
+    if (data.needs2fa) {
+      setStep('code')
+      setLoading(false)
+      return
+    }
+
+    await entrar()
+  }
+
+  // Paso 2: enviar el código 2FA.
+  async function handleCodeSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    await entrar(code)
   }
 
   return (
@@ -49,6 +84,51 @@ function LoginForm() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+        {step === 'code' ? (
+          <>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="bg-orange-50 rounded-lg p-2"><ShieldCheck className="w-5 h-5 text-orange-500" /></div>
+              <h2 className="text-lg font-semibold text-gray-900">Verificación en dos pasos</h2>
+            </div>
+            <p className="text-sm text-gray-500 mb-6">Introduce el código de 6 dígitos de tu app de autenticación.</p>
+
+            <form onSubmit={handleCodeSubmit} className="space-y-4">
+              <input
+                type="text"
+                value={code}
+                onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                inputMode="numeric"
+                autoFocus
+                placeholder="000000"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg text-center tracking-[0.5em] font-mono text-xl focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"
+              />
+
+              {error && (
+                <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-700 text-sm px-3 py-2.5 rounded-lg">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || code.length !== 6}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2.5 px-4 rounded-lg text-sm transition-colors disabled:opacity-60"
+              >
+                {loading ? 'Verificando...' : 'Verificar'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setStep('cred'); setCode(''); setError('') }}
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mx-auto"
+              >
+                <ArrowLeft className="w-4 h-4" /> Volver
+              </button>
+            </form>
+          </>
+        ) : (
+        <>
         <h2 className="text-lg font-semibold text-gray-900 mb-6">Iniciar sesión</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -112,6 +192,8 @@ function LoginForm() {
             ¿Olvidaste tu contraseña?
           </Link>
         </div>
+        </>
+        )}
       </div>
 
       <p className="text-center text-xs text-gray-400 mt-6">CargoPrime · Logística de calidad</p>

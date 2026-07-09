@@ -124,6 +124,90 @@ async function spCall(
   throw new Error(`SP-API ${path}: quota excedida tras varios reintentos`)
 }
 
+// Igual que spCall pero permite método + cuerpo JSON (para la Feeds API, que usa POST).
+async function spSend(
+  accessToken: string,
+  marketplaceId: string,
+  path: string,
+  method: 'POST' | 'GET',
+  body?: unknown,
+  sandbox = false
+) {
+  const base = getSpApiBase(marketplaceId, sandbox)
+  const url = `${base}${path}`
+
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const res = await fetch(url, {
+      method,
+      headers: { 'x-amz-access-token': accessToken, 'Content-Type': 'application/json' },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    })
+    if (res.status === 429) {
+      const retryAfter = res.headers.get('Retry-After')
+      const wait = retryAfter ? parseFloat(retryAfter) * 1000 : 2000 * Math.pow(2, attempt)
+      await sleep(wait)
+      continue
+    }
+    if (!res.ok) {
+      const err = await res.text()
+      throw new Error(`SP-API ${path} (${res.status}): ${err}`)
+    }
+    return res.json()
+  }
+  throw new Error(`SP-API ${path}: quota excedida tras varios reintentos`)
+}
+
+// --- Feeds API 2021-06-30 (confirmación de despacho a Amazon) ---
+
+/** Paso 1: crea el documento del feed y devuelve la URL S3 prefirmada donde subir el contenido. */
+export async function createFeedDocument(
+  accessToken: string,
+  marketplaceId: string,
+  contentType: string,
+  sandbox = false
+): Promise<{ feedDocumentId: string; url: string }> {
+  const data = await spSend(accessToken, marketplaceId, '/feeds/2021-06-30/documents', 'POST', { contentType }, sandbox)
+  return { feedDocumentId: data.feedDocumentId, url: data.url }
+}
+
+/** Paso 2: sube el XML a la URL prefirmada (PUT directo a S3, con el MISMO Content-Type). */
+export async function uploadFeedContent(url: string, content: string, contentType: string): Promise<void> {
+  const res = await fetch(url, { method: 'PUT', headers: { 'Content-Type': contentType }, body: content })
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`Subida de feed (${res.status}): ${err}`)
+  }
+}
+
+/** Paso 3: crea el feed apuntando al documento subido. Devuelve el feedId. */
+export async function createFeed(
+  accessToken: string,
+  marketplaceId: string,
+  feedType: string,
+  inputFeedDocumentId: string,
+  sandbox = false
+): Promise<string> {
+  const data = await spSend(
+    accessToken,
+    marketplaceId,
+    '/feeds/2021-06-30/feeds',
+    'POST',
+    { feedType, marketplaceIds: [marketplaceId], inputFeedDocumentId },
+    sandbox
+  )
+  return data.feedId as string
+}
+
+/** Consulta el estado de procesamiento de un feed (CANCELLED/DONE/FATAL/IN_PROGRESS...). */
+export async function getFeed(
+  accessToken: string,
+  marketplaceId: string,
+  feedId: string,
+  sandbox = false
+): Promise<{ processingStatus: string; resultFeedDocumentId?: string }> {
+  return spSend(accessToken, marketplaceId, `/feeds/2021-06-30/feeds/${feedId}`, 'GET', undefined, sandbox)
+}
+
 export interface AmazonOrder {
   AmazonOrderId: string
   PurchaseDate: string

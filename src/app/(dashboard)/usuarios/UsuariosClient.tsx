@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Badge from '@/components/Badge'
-import { Plus, X, Eye, EyeOff, KeyRound, Pencil, UserX, UserCheck, ShieldCheck } from 'lucide-react'
+import { Plus, X, Eye, EyeOff, KeyRound, Pencil, UserX, UserCheck, ShieldCheck, ShieldX, Building2 } from 'lucide-react'
 import { formatDateTime } from '@/lib/utils'
 
 interface Usuario {
@@ -14,19 +14,25 @@ interface Usuario {
   rol: string
   activo: boolean
   createdAt: string
+  twoFactorEnabled: boolean
+  clienteId: number | null
+  clienteNombre: string | null
 }
 
-interface Props { usuarios: Usuario[] }
+interface ClienteOpt { id: number; nombre: string }
+interface Props { usuarios: Usuario[]; clientes: ClienteOpt[] }
 
-export default function UsuariosClient({ usuarios }: Props) {
+export default function UsuariosClient({ usuarios, clientes }: Props) {
   const router = useRouter()
   const [modal, setModal] = useState<'crear' | 'editar' | null>(null)
   const [selected, setSelected] = useState<Usuario | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPwd, setShowPwd] = useState(false)
+  const [rolSel, setRolSel] = useState('readonly')
 
-  function openEditar(u: Usuario) { setSelected(u); setModal('editar'); setError('') }
+  function openCrear() { setSelected(null); setRolSel('readonly'); setModal('crear'); setError('') }
+  function openEditar(u: Usuario) { setSelected(u); setRolSel(u.rol); setModal('editar'); setError('') }
   function close() { setModal(null); setSelected(null); setError('') }
 
   async function handleCrear(e: React.FormEvent<HTMLFormElement>) {
@@ -69,6 +75,13 @@ export default function UsuariosClient({ usuarios }: Props) {
     }
   }
 
+  async function resetear2FA(u: Usuario) {
+    if (!confirm(`¿Desactivar el 2FA de "${u.nombre}"? Podrá volver a entrar solo con su contraseña y configurarlo de nuevo.`)) return
+    const res = await fetch(`/api/usuarios/${u.id}/reset-2fa`, { method: 'POST' })
+    if (res.ok) { alert('2FA desactivado para este usuario.'); router.refresh() }
+    else { const d = await res.json().catch(() => ({})); alert(`Error: ${d.error ?? 'No se pudo'}`) }
+  }
+
   const inputClass = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
   const labelClass = "block text-sm font-medium text-gray-700 mb-1"
 
@@ -78,7 +91,7 @@ export default function UsuariosClient({ usuarios }: Props) {
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-semibold text-gray-900">Usuarios del sistema</h2>
           <button
-            onClick={() => { setModal('crear'); setError('') }}
+            onClick={openCrear}
             className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -106,10 +119,16 @@ export default function UsuariosClient({ usuarios }: Props) {
                   <td className="px-4 py-3 text-gray-700">{u.nombre}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{u.email}</td>
                   <td className="px-4 py-3">
-                    {u.rol === 'admin'
-                      ? <Badge variant="orange"><ShieldCheck className="w-3 h-3 inline mr-1" />Admin</Badge>
-                      : <Badge variant="default">Solo lectura</Badge>
-                    }
+                    {u.rol === 'admin' ? (
+                      <Badge variant="orange"><ShieldCheck className="w-3 h-3 inline mr-1" />Admin</Badge>
+                    ) : u.rol === 'seller' ? (
+                      <div className="flex flex-col gap-0.5">
+                        <Badge variant="indigo"><Building2 className="w-3 h-3 inline mr-1" />Seller</Badge>
+                        <span className="text-[11px] text-gray-400">{u.clienteNombre ?? 'sin cliente'}</span>
+                      </div>
+                    ) : (
+                      <Badge variant="default">Solo lectura</Badge>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant={u.activo ? 'success' : 'danger'}>{u.activo ? 'Activo' : 'Inactivo'}</Badge>
@@ -123,6 +142,11 @@ export default function UsuariosClient({ usuarios }: Props) {
                       <button onClick={() => resetearDirecto(u)} className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors" title="Enviar contraseña temporal por email">
                         <KeyRound className="w-3.5 h-3.5" />
                       </button>
+                      {u.twoFactorEnabled && (
+                        <button onClick={() => resetear2FA(u)} className="p-1.5 text-amber-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="2FA activado — resetear (si perdió el móvil)">
+                          <ShieldX className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                       <button onClick={() => toggleActivo(u)} className={`p-1.5 rounded transition-colors ${u.activo ? 'text-gray-400 hover:text-red-500 hover:bg-red-50' : 'text-gray-400 hover:text-green-600 hover:bg-green-50'}`} title={u.activo ? 'Desactivar' : 'Activar'}>
                         {u.activo ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
                       </button>
@@ -160,11 +184,22 @@ export default function UsuariosClient({ usuarios }: Props) {
               </div>
               <div>
                 <label className={labelClass}>Rol *</label>
-                <select name="rol" required defaultValue={selected?.rol ?? 'readonly'} className={inputClass}>
-                  <option value="readonly">Solo lectura</option>
-                  <option value="admin">Administrador</option>
+                <select name="rol" required value={rolSel} onChange={e => setRolSel(e.target.value)} className={inputClass}>
+                  <option value="readonly">Solo lectura (staff)</option>
+                  <option value="admin">Administrador (staff)</option>
+                  <option value="seller">Seller (portal de cliente)</option>
                 </select>
               </div>
+              {rolSel === 'seller' && (
+                <div>
+                  <label className={labelClass}>Cliente asignado *</label>
+                  <select name="clienteId" required defaultValue={selected?.clienteId ?? ''} className={inputClass}>
+                    <option value="" disabled>Selecciona un cliente…</option>
+                    {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                  </select>
+                  <p className="text-xs text-gray-400 mt-1">El seller solo verá los pedidos, inventario e informes de este cliente.</p>
+                </div>
+              )}
               {modal === 'crear' && (
                 <div>
                   <label className={labelClass}>Contraseña *</label>

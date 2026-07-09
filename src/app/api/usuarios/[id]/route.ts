@@ -12,14 +12,17 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
   try {
     const { id } = await params
-    const { nombre, email, rol } = await req.json()
+    const { nombre, email, rol, clienteId } = await req.json()
     if (!nombre || !email) {
       return NextResponse.json({ error: 'Nombre y email son obligatorios' }, { status: 400 })
+    }
+    if (rol === 'seller' && !clienteId) {
+      return NextResponse.json({ error: 'Un usuario seller debe tener un cliente asignado' }, { status: 400 })
     }
 
     const user = await prisma.user.update({
       where: { id: parseInt(id) },
-      data: { nombre, email, rol },
+      data: { nombre, email, rol, clienteId: rol === 'seller' ? Number(clienteId) : null },
       select: { id: true, username: true, nombre: true, email: true, rol: true, activo: true },
     })
 

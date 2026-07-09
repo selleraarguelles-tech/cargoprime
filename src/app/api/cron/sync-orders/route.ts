@@ -6,6 +6,7 @@ import { getAccessToken, getRecentUnshippedOrders, getOrderItems, getOrderAddres
 import { syncStockForCuenta } from '@/lib/syncStock'
 import { syncTrackingForCuenta } from '@/lib/syncTracking'
 import { refreshCttTrackingPendientes } from '@/lib/refreshCttTracking'
+import { confirmShipmentsForCuenta } from '@/lib/confirmShipmentAmazon'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
@@ -39,6 +40,7 @@ export async function GET(req: NextRequest) {
 
   let totalCreados = 0
   let totalActualizados = 0
+  let totalConfirmados = 0
   const allErrors: string[] = []
 
   for (const cuenta of cuentas) {
@@ -110,6 +112,19 @@ export async function GET(req: NextRequest) {
       totalActualizados += actualizados
 
       await syncStockForCuenta(accessToken, cuenta.sellerId, cuenta.marketplaceId, cuenta.clienteId, cuenta.isSandbox)
+
+      // Subir a Amazon el tracking de CTT de los pedidos ya enviados (protege el Valid Tracking Rate).
+      try {
+        const { confirmados } = await confirmShipmentsForCuenta(accessToken, {
+          clienteId: cuenta.clienteId,
+          sellerId: cuenta.sellerId,
+          marketplaceId: cuenta.marketplaceId,
+          isSandbox: cuenta.isSandbox,
+        })
+        totalConfirmados += confirmados
+      } catch (e: unknown) {
+        allErrors.push(`Confirmación Amazon cuenta ${cuenta.id}: ${e instanceof Error ? e.message : String(e)}`)
+      }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
       allErrors.push(`Cuenta ${cuenta.id}: ${msg}`)
@@ -134,6 +149,6 @@ export async function GET(req: NextRequest) {
     create: { clave: 'cron_last_sync_at', valor: syncStartedAt },
   })
 
-  console.log(`[cron/sync-orders] since=${since.toISOString()} creados=${totalCreados} actualizados=${totalActualizados} cttRevisados=${ctt.revisados} cttActualizados=${ctt.actualizados} errores=${allErrors.length}`)
-  return NextResponse.json({ ok: true, since: since.toISOString(), totalCreados, totalActualizados, cttTracking: ctt, errores: allErrors.slice(0, 10) })
+  console.log(`[cron/sync-orders] since=${since.toISOString()} creados=${totalCreados} actualizados=${totalActualizados} confirmadosAmazon=${totalConfirmados} cttRevisados=${ctt.revisados} cttActualizados=${ctt.actualizados} errores=${allErrors.length}`)
+  return NextResponse.json({ ok: true, since: since.toISOString(), totalCreados, totalActualizados, totalConfirmados, cttTracking: ctt, errores: allErrors.slice(0, 10) })
 }

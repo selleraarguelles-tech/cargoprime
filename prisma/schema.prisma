@@ -18,6 +18,46 @@ model Cliente {
   cuentasTikTok  CuentaTikTok[]
   cuentasShopify CuentaShopify[]
   envios         Envio[]
+  usuarios       User[]
+  rateCard       RateCard?
+  facturas       Factura[]
+}
+
+model RateCard {
+  id                  Int      @id @default(autoincrement())
+  clienteId           Int      @unique
+  cuotaMensual        Float    @default(0)
+  tarifaPedido        Float    @default(0)
+  tarifaRecepcion     Float    @default(0)
+  tarifaUnidadAlmacen Float    @default(0)
+  iva                 Float    @default(21)
+  updatedAt           DateTime @updatedAt
+  cliente             Cliente  @relation(fields: [clienteId], references: [id])
+}
+
+model Factura {
+  id        Int            @id @default(autoincrement())
+  clienteId Int
+  periodo   String         // 'YYYY-MM'
+  estado    String         @default("borrador") // borrador | emitida | pagada
+  subtotal  Float          @default(0)
+  iva       Float          @default(0)
+  total     Float          @default(0)
+  createdAt DateTime       @default(now())
+  cliente   Cliente        @relation(fields: [clienteId], references: [id])
+  lineas    FacturaLinea[]
+
+  @@unique([clienteId, periodo])
+}
+
+model FacturaLinea {
+  id             Int     @id @default(autoincrement())
+  facturaId      Int
+  concepto       String
+  cantidad       Float
+  precioUnitario Float
+  importe        Float
+  factura        Factura @relation(fields: [facturaId], references: [id], onDelete: Cascade)
 }
 
 model Envio {
@@ -83,6 +123,9 @@ model Producto {
   stockActual         Int               @default(0)
   stockMinimo         Int               @default(50)
   notificadoStockBajo Boolean           @default(false)
+  precioVenta         Float             @default(0)
+  costeUnitario       Float             @default(0)
+  comisionAmazon      Float             @default(15)
   createdAt           DateTime          @default(now())
   cliente             Cliente           @relation(fields: [clienteId], references: [id])
   pedidos             Pedido[]
@@ -108,6 +151,8 @@ model Pedido {
   enviadoAt             DateTime?
   entregadoAt           DateTime?
   cttReclamadoAt        DateTime?
+  amazonConfirmadoAt    DateTime?
+  amazonFeedId          String?
   createdAt             DateTime @default(now())
   cliente               Cliente  @relation(fields: [clienteId], references: [id])
   producto              Producto @relation(fields: [productoId], references: [id])
@@ -140,4 +185,8 @@ model User {
   updatedAt        DateTime  @updatedAt
   resetToken       String?   @unique
   resetTokenExpiry DateTime?
+  twoFactorSecret  String?
+  twoFactorEnabled Boolean   @default(false)
+  clienteId        Int?
+  cliente          Cliente?  @relation(fields: [clienteId], references: [id])
 }

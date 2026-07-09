@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Download, FileSpreadsheet, BarChart3 } from 'lucide-react'
+import { Download, FileSpreadsheet, BarChart3, AlertTriangle } from 'lucide-react'
 import ReportesFilters from './ReportesFilters'
 import { CANALES } from '@/lib/utils'
 import { entregadoEnPlazo } from '@/lib/sla'
@@ -118,6 +118,14 @@ export default async function ReportesPage({ searchParams }: Props) {
           >
             <FileSpreadsheet className="w-4 h-4" />
             Exportar envíos (CSV)
+          </a>
+          <a
+            href={`/api/reportes/retrasos${cliente ? `?cliente=${cliente}` : ''}`}
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            title="Envíos CTT con más de 36h sin entregar, con el tiempo de más — para presentar a CTT"
+          >
+            <AlertTriangle className="w-4 h-4" />
+            Informe retrasos CTT (+36h)
           </a>
         </div>
       </div>

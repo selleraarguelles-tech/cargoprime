@@ -8,10 +8,14 @@ on:
     - cron: '30 6 * * 1-5'
     # Sincronización de mediodía 13:30 Madrid (11:30 UTC en verano CEST)
     - cron: '30 11 * * 1-5'
+    # Avisos/reclamaciones de retrasos a medianoche Madrid (23:00 UTC, todos los días;
+    # el endpoint descarta sábado/domingo en hora de Madrid)
+    - cron: '0 23 * * *'
   workflow_dispatch: # permite lanzarlo manualmente desde GitHub
 
 jobs:
   sync:
+    if: github.event.schedule != '0 23 * * *'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -21,3 +25,16 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             "${{ secrets.APP_URL }}/api/cron/sync-orders" \
             && echo "Sync OK" || echo "Sync failed"
+
+  avisos-medianoche:
+    # Solo en el disparo de las 23:00 UTC (medianoche Madrid) o manualmente.
+    if: github.event.schedule == '0 23 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Enviar avisos y reclamaciones de retrasos +36h
+        run: |
+          curl -sf -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/avisos-retraso" \
+            && echo "Avisos OK" || echo "Avisos failed"

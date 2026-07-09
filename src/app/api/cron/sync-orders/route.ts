@@ -6,7 +6,6 @@ import { getAccessToken, getRecentUnshippedOrders, getOrderItems, getOrderAddres
 import { syncStockForCuenta } from '@/lib/syncStock'
 import { syncTrackingForCuenta } from '@/lib/syncTracking'
 import { refreshCttTrackingPendientes } from '@/lib/refreshCttTracking'
-import { avisarRetrasosEntrega } from '@/lib/avisosRetraso'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
@@ -125,13 +124,8 @@ export async function GET(req: NextRequest) {
     allErrors.push(`CTT tracking: ${e instanceof Error ? e.message : String(e)}`)
   }
 
-  // Avisos por email de envíos +36h sin entregar (resumen interno + reclamación a CTT)
-  let avisos = { retrasados: 0, reclamados: 0, emails: false }
-  try {
-    avisos = await avisarRetrasosEntrega()
-  } catch (e: unknown) {
-    allErrors.push(`Avisos retraso: ${e instanceof Error ? e.message : String(e)}`)
-  }
+  // Los avisos/reclamaciones por email se envían en el cron de medianoche
+  // (/api/cron/avisos-retraso), solo en días laborables.
 
   // Persist the sync start time so next run picks up from here
   await prisma.configuracion.upsert({
@@ -140,6 +134,6 @@ export async function GET(req: NextRequest) {
     create: { clave: 'cron_last_sync_at', valor: syncStartedAt },
   })
 
-  console.log(`[cron/sync-orders] since=${since.toISOString()} creados=${totalCreados} actualizados=${totalActualizados} cttRevisados=${ctt.revisados} cttActualizados=${ctt.actualizados} retrasados36h=${avisos.retrasados} reclamados=${avisos.reclamados} errores=${allErrors.length}`)
-  return NextResponse.json({ ok: true, since: since.toISOString(), totalCreados, totalActualizados, cttTracking: ctt, avisosRetraso: avisos, errores: allErrors.slice(0, 10) })
+  console.log(`[cron/sync-orders] since=${since.toISOString()} creados=${totalCreados} actualizados=${totalActualizados} cttRevisados=${ctt.revisados} cttActualizados=${ctt.actualizados} errores=${allErrors.length}`)
+  return NextResponse.json({ ok: true, since: since.toISOString(), totalCreados, totalActualizados, cttTracking: ctt, errores: allErrors.slice(0, 10) })
 }

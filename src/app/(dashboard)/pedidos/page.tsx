@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import PedidosFilters from './PedidosFilters'
 import SyncAllButton from './SyncAllButton'
+import ImportarCsvButton from './ImportarCsvButton'
 import PedidosTabla from './PedidosTabla'
 
 export const dynamic = 'force-dynamic'
@@ -67,6 +68,7 @@ export default async function PedidosPage({ searchParams }: Props) {
         </div>
         {isAdmin && (
           <div className="flex items-center gap-2">
+            <ImportarCsvButton clientes={clientes.map(c => ({ id: c.id, nombre: c.nombre }))} />
             <SyncAllButton />
             <Link href="/pedidos/nuevo" className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               <Plus className="w-4 h-4" />

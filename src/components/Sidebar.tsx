@@ -26,6 +26,7 @@ import {
   Radar,
   Receipt,
   TrendingUp,
+  RotateCcw,
 } from 'lucide-react'
 
 interface SidebarUser {
@@ -66,6 +67,7 @@ const groups: NavGroup[] = [
     items: [
       { href: '/inventario', label: 'Inventario', icon: Package },
       { href: '/envios', label: 'Envíos entrantes', icon: Truck },
+      { href: '/devoluciones', label: 'Devoluciones', icon: RotateCcw },
       { href: '/clientes', label: 'Clientes', icon: Users },
     ],
   },

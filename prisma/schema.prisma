@@ -21,6 +21,7 @@ model Cliente {
   usuarios       User[]
   rateCard       RateCard?
   facturas       Factura[]
+  devoluciones   Devolucion[]
 }
 
 model RateCard {
@@ -156,6 +157,21 @@ model Pedido {
   createdAt             DateTime @default(now())
   cliente               Cliente  @relation(fields: [clienteId], references: [id])
   producto              Producto @relation(fields: [productoId], references: [id])
+  devoluciones          Devolucion[]
+}
+
+model Devolucion {
+  id          Int       @id @default(autoincrement())
+  pedidoId    Int
+  clienteId   Int
+  motivo      String?
+  estado      String    @default("solicitada") // solicitada | recibida | reembolsada | rechazada
+  reingresado Boolean   @default(false)
+  notas       String?
+  createdAt   DateTime  @default(now())
+  recibidaAt  DateTime?
+  pedido      Pedido    @relation(fields: [pedidoId], references: [id])
+  cliente     Cliente   @relation(fields: [clienteId], references: [id])
 }
 
 model MovimientoStock {

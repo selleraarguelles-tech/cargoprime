@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { LayoutDashboard, ShoppingCart, Package, BarChart3, ShieldCheck, Boxes, Building2, LogOut, Receipt, TrendingUp } from 'lucide-react'
+import { LayoutDashboard, ShoppingCart, Package, BarChart3, ShieldCheck, Boxes, Building2, LogOut, Receipt, TrendingUp, RotateCcw } from 'lucide-react'
 
 interface Props {
   user: { name: string; empresa: string }
@@ -12,6 +12,7 @@ interface Props {
 const items = [
   { href: '/portal', label: 'Inicio', icon: LayoutDashboard, exact: true },
   { href: '/portal/pedidos', label: 'Mis pedidos', icon: ShoppingCart },
+  { href: '/portal/devoluciones', label: 'Devoluciones', icon: RotateCcw },
   { href: '/portal/inventario', label: 'Inventario', icon: Package },
   { href: '/portal/rentabilidad', label: 'Rentabilidad', icon: TrendingUp },
   { href: '/portal/facturas', label: 'Facturas', icon: Receipt },

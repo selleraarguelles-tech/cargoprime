@@ -20,7 +20,10 @@ export async function GET(req: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
-  const cliente = req.nextUrl.searchParams.get('cliente')
+  const sp = req.nextUrl.searchParams
+  const cliente = sp.get('cliente')
+  const desde = sp.get('desde')
+  const hasta = sp.get('hasta')
 
   const where: Record<string, unknown> = {
     trackingNumber: { not: null },
@@ -37,6 +40,9 @@ export async function GET(req: NextRequest) {
 
   const ahora = Date.now()
   const limiteMs = ahora - LIMITE_HORAS * 3600000
+  // Rango por fecha de expedición (enviadoAt, o createdAt si falta)
+  const desdeMs = desde ? new Date(`${desde}T00:00:00`).getTime() : -Infinity
+  const hastaMs = hasta ? new Date(`${hasta}T23:59:59.999`).getTime() : Infinity
 
   const retrasados = pedidos
     .map(p => {
@@ -44,7 +50,7 @@ export async function GET(req: NextRequest) {
       const horas = Math.floor((ahora - base) / 3600000)
       return { p, base, horas }
     })
-    .filter(x => x.base < limiteMs)
+    .filter(x => x.base < limiteMs && x.base >= desdeMs && x.base <= hastaMs)
 
   const filas = [
     fila(['Nº de envío CTT', 'Referencia pedido', 'Cliente', 'Destino', 'CP', 'Fecha expedición', 'Último estado', 'Horas desde expedición', 'Horas de más (sobre 36h)']),

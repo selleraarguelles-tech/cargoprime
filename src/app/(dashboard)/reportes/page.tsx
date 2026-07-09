@@ -120,9 +120,9 @@ export default async function ReportesPage({ searchParams }: Props) {
             Exportar envíos (CSV)
           </a>
           <a
-            href={`/api/reportes/retrasos${cliente ? `?cliente=${cliente}` : ''}`}
+            href={`/api/reportes/retrasos?${qs.toString()}`}
             className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            title="Envíos CTT con más de 36h sin entregar, con el tiempo de más — para presentar a CTT"
+            title="Envíos CTT con más de 36h sin entregar (según fecha y cliente filtrados), con el tiempo de más — para presentar a CTT"
           >
             <AlertTriangle className="w-4 h-4" />
             Informe retrasos CTT (+36h)

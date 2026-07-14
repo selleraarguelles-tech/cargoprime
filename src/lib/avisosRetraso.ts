@@ -38,7 +38,7 @@ export async function avisarRetrasosEntrega(): Promise<{ retrasados: number; rec
   const retrasados = candidatos.filter(p => (p.enviadoAt ?? p.createdAt) < limite)
   if (retrasados.length === 0) return { retrasados: 0, reclamados: 0, emails: false }
 
-  if (!emailConfigurado()) {
+  if (!(await emailConfigurado())) {
     console.warn('[avisosRetraso] SMTP no configurado: hay', retrasados.length, 'envíos +36h sin avisar')
     return { retrasados: retrasados.length, reclamados: 0, emails: false }
   }

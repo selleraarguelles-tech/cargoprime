@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Settings, ShoppingBag, CheckCircle, AlertCircle, ExternalLink, Copy, Eye, EyeOff, Truck, Music2, Store } from 'lucide-react'
+import { Settings, ShoppingBag, CheckCircle, AlertCircle, ExternalLink, Copy, Eye, EyeOff, Truck, Music2, Store, Mail } from 'lucide-react'
 
 export default function ConfiguracionPage() {
   const [form, setForm] = useState({
@@ -25,6 +25,12 @@ export default function ConfiguracionPage() {
     tiktok_app_key: '',
     tiktok_app_secret: '',
     tiktok_redirect_uri: '',
+    smtp_host: '',
+    smtp_port: '465',
+    smtp_secure: 'true',
+    smtp_user: '',
+    smtp_pass: '',
+    smtp_from: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -33,6 +39,8 @@ export default function ConfiguracionPage() {
   const [showSecret, setShowSecret] = useState(false)
   const [uriSuggestion, setUriSuggestion] = useState('')
   const [tiktokUriSuggestion, setTiktokUriSuggestion] = useState('')
+  const [probandoEmail, setProbandoEmail] = useState(false)
+  const [resultadoEmail, setResultadoEmail] = useState<{ ok: boolean; texto: string } | null>(null)
 
   useEffect(() => {
     fetch('/api/configuracion')
@@ -59,6 +67,12 @@ export default function ConfiguracionPage() {
           tiktok_app_key: data.tiktok_app_key ?? '',
           tiktok_app_secret: data.tiktok_app_secret ?? '',
           tiktok_redirect_uri: data.tiktok_redirect_uri ?? data.tiktok_redirect_uri_suggestion ?? '',
+          smtp_host: data.smtp_host ?? '',
+          smtp_port: data.smtp_port ?? '465',
+          smtp_secure: data.smtp_secure ?? 'true',
+          smtp_user: data.smtp_user ?? '',
+          smtp_pass: data.smtp_pass ?? '',
+          smtp_from: data.smtp_from ?? '',
         }))
         if (data.amazon_redirect_uri_suggestion) setUriSuggestion(data.amazon_redirect_uri_suggestion)
         if (data.tiktok_redirect_uri_suggestion) setTiktokUriSuggestion(data.tiktok_redirect_uri_suggestion)
@@ -81,6 +95,33 @@ export default function ConfiguracionPage() {
 
   function copyToClipboard(text: string) {
     navigator.clipboard.writeText(text)
+  }
+
+  // Guarda la configuración y envía un correo de prueba al propio buzón.
+  async function guardarYProbarEmail() {
+    setProbandoEmail(true)
+    setResultadoEmail(null)
+    try {
+      const save = await fetch('/api/configuracion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (!save.ok) {
+        setResultadoEmail({ ok: false, texto: 'No se pudo guardar la configuración' })
+        return
+      }
+      const destino = form.smtp_user || 'info@cargoprime.es'
+      const res = await fetch(`/api/email/test?to=${encodeURIComponent(destino)}`)
+      const d = await res.json()
+      if (d.enviado) setResultadoEmail({ ok: true, texto: `Correo de prueba enviado a ${destino}. Revisa la bandeja.` })
+      else if (d.configurado === false) setResultadoEmail({ ok: false, texto: 'Faltan datos: rellena servidor, usuario y contraseña.' })
+      else setResultadoEmail({ ok: false, texto: `Fallo al enviar: ${d.error ?? 'error desconocido'}` })
+    } catch {
+      setResultadoEmail({ ok: false, texto: 'Error de conexión al probar' })
+    } finally {
+      setProbandoEmail(false)
+    }
   }
 
   const isConfigured = !!(form.amazon_app_id && form.amazon_lwa_client_id && form.amazon_lwa_client_secret && form.amazon_redirect_uri)
@@ -467,6 +508,81 @@ export default function ConfiguracionPage() {
             <button onClick={handleSave} disabled={saving} className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg disabled:opacity-60 transition-colors">
               {saving ? 'Guardando...' : 'Guardar'}
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Correo (SMTP) */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+          <div className="bg-sky-100 rounded-lg p-2">
+            <Mail className="w-5 h-5 text-sky-600" />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-semibold text-gray-900">Correo (SMTP)</h2>
+            <p className="text-xs text-gray-500">Para los avisos diarios: retrasos +36h, reclamaciones a CTT y stock bajo</p>
+          </div>
+          {form.smtp_host && form.smtp_user && form.smtp_pass && (
+            <span className="flex items-center gap-1.5 text-xs text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
+              <CheckCircle className="w-3.5 h-3.5" /> Configurado
+            </span>
+          )}
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>Servidor SMTP</label>
+              <input value={form.smtp_host} onChange={e => setForm(f => ({ ...f, smtp_host: e.target.value }))} className={inputClass} placeholder="smtp.hostinger.com" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className={labelClass}>Puerto</label>
+                <input value={form.smtp_port} onChange={e => setForm(f => ({ ...f, smtp_port: e.target.value }))} className={inputClass} placeholder="465" />
+              </div>
+              <div>
+                <label className={labelClass}>Seguro (SSL)</label>
+                <select value={form.smtp_secure} onChange={e => setForm(f => ({ ...f, smtp_secure: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300">
+                  <option value="true">Sí (465)</option>
+                  <option value="false">No (587)</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>Usuario (email)</label>
+              <input value={form.smtp_user} onChange={e => setForm(f => ({ ...f, smtp_user: e.target.value }))} className={inputClass} placeholder="info@cargoprime.es" />
+            </div>
+            <div>
+              <label className={labelClass}>Contraseña del buzón</label>
+              <div className="relative">
+                <input type={showSecret ? 'text' : 'password'} value={form.smtp_pass} onChange={e => setForm(f => ({ ...f, smtp_pass: e.target.value }))} className={`${inputClass} pr-10`} placeholder="••••••••" />
+                <button type="button" onClick={() => setShowSecret(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="col-span-2">
+              <label className={labelClass}>Remitente</label>
+              <input value={form.smtp_from} onChange={e => setForm(f => ({ ...f, smtp_from: e.target.value }))} className={inputClass} placeholder="CargoPrime <info@cargoprime.es>" />
+            </div>
+          </div>
+
+          {resultadoEmail && (
+            <div className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg ${resultadoEmail.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+              {resultadoEmail.ok ? <CheckCircle className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+              {resultadoEmail.texto}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-1">
+            <p className="text-xs text-gray-400">Se guarda en la base de datos, como Amazon y CTT.</p>
+            <div className="flex gap-2">
+              <button onClick={guardarYProbarEmail} disabled={probandoEmail} className="px-4 py-2 border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium rounded-lg disabled:opacity-60 transition-colors">
+                {probandoEmail ? 'Probando...' : 'Guardar y probar envío'}
+              </button>
+              <button onClick={handleSave} disabled={saving} className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg disabled:opacity-60 transition-colors">
+                {saving ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
           </div>
         </div>
       </div>

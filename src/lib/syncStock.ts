@@ -19,7 +19,7 @@ export async function syncStockForCuenta(
     prisma.cliente.findUnique({ where: { id: clienteId }, select: { nombre: true, email: true } }),
   ])
 
-  const puedeAvisar = emailConfigurado() && !!cliente?.email
+  const puedeAvisar = (await emailConfigurado()) && !!cliente?.email
   let updated = 0
   let errors = 0
   let avisos = 0

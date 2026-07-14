@@ -17,7 +17,7 @@ export async function evaluarAlertaStock(productoId: number): Promise<void> {
   const bajoMinimo = p.stockActual <= p.stockMinimo
 
   if (bajoMinimo && !p.notificadoStockBajo) {
-    if (emailConfigurado() && p.cliente.email) {
+    if ((await emailConfigurado()) && p.cliente.email) {
       try {
         await sendLowStockEmail(p.cliente.email, p.cliente.nombre, p.nombre, p.sku, p.stockActual, p.stockMinimo)
       } catch (e) {

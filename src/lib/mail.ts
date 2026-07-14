@@ -1,20 +1,65 @@
 import nodemailer from 'nodemailer'
+import { prisma } from './prisma'
 
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT ?? 587),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  })
+export interface SmtpConfig {
+  host: string
+  port: number
+  secure: boolean
+  user: string
+  pass: string
+  from: string
+}
+
+const SMTP_KEYS = ['smtp_host', 'smtp_port', 'smtp_secure', 'smtp_user', 'smtp_pass', 'smtp_from']
+
+/**
+ * Configuracion SMTP: primero la guardada en la base de datos (pagina Configuracion
+ * de la app) y, si falta, las variables de entorno. Devuelve null si no hay lo esencial.
+ */
+export async function getSmtpConfig(): Promise<SmtpConfig | null> {
+  let db: Record<string, string> = {}
+  try {
+    const rows = await prisma.configuracion.findMany({ where: { clave: { in: SMTP_KEYS } } })
+    db = Object.fromEntries(rows.map(r => [r.clave, r.valor]))
+  } catch {
+    // si la BD no responde, seguimos solo con el entorno
+  }
+  const e = process["env"]
+
+  const host = db.smtp_host || e.SMTP_HOST || ''
+  const user = db.smtp_user || e.SMTP_USER || ''
+  const pass = db.smtp_pass || e.SMTP_PASS || ''
+  if (!host || !user || !pass) return null
+
+  const port = Number(db.smtp_port || e.SMTP_PORT || 587)
+  const secureRaw = db.smtp_secure || e.SMTP_SECURE || (port === 465 ? 'true' : 'false')
+
+  return {
+    host,
+    port,
+    secure: secureRaw === 'true',
+    user,
+    pass,
+    from: db.smtp_from || e.SMTP_FROM || `CargoPrime <${user}>`,
+  }
+}
+
+async function getMailer(): Promise<{ transporter: ReturnType<typeof nodemailer.createTransport>; from: string }> {
+  const cfg = await getSmtpConfig()
+  if (!cfg) throw new Error('SMTP no configurado: rellena Correo (SMTP) en Configuracion')
+  return {
+    transporter: nodemailer.createTransport({
+      host: cfg.host,
+      port: cfg.port,
+      secure: cfg.secure,
+      auth: { user: cfg.user, pass: cfg.pass },
+    }),
+    from: cfg.from,
+  }
 }
 
 
 export async function sendPasswordResetEmail(to: string, nombre: string, tempPassword: string) {
-  const from = process.env.SMTP_FROM ?? 'Almacén FBM <no-reply@almacen.local>'
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
@@ -41,7 +86,7 @@ export async function sendPasswordResetEmail(to: string, nombre: string, tempPas
     </div>
   `
 
-  const transporter = createTransporter()
+  const { transporter, from } = await getMailer()
   await transporter.sendMail({
     from,
     to,
@@ -52,9 +97,8 @@ export async function sendPasswordResetEmail(to: string, nombre: string, tempPas
 }
 
 
-export function emailConfigurado(): boolean {
-  const e = process["env"]
-  return !!(e.SMTP_HOST && e.SMTP_USER && e.SMTP_PASS)
+export async function emailConfigurado(): Promise<boolean> {
+  return (await getSmtpConfig()) !== null
 }
 
 export async function sendLowStockEmail(
@@ -65,7 +109,6 @@ export async function sendLowStockEmail(
   stockActual: number,
   stockMinimo: number
 ) {
-  const from = process["env"].SMTP_FROM ?? 'CargoPrime <no-reply@cargoprime.es>'
   const agotado = stockActual === 0
 
   const html = `
@@ -102,7 +145,7 @@ export async function sendLowStockEmail(
     </div>
   `
 
-  const transporter = createTransporter()
+  const { transporter, from } = await getMailer()
   await transporter.sendMail({
     from,
     to,
@@ -138,7 +181,6 @@ function cabeceraCargoPrime(): string {
 
 /** Resumen interno diario de envios con mas de 36h sin entregar. */
 export async function sendResumenRetrasos(to: string, filas: FilaRetraso[]) {
-  const from = process["env"].SMTP_FROM ?? 'CargoPrime <no-reply@cargoprime.es>'
   const fecha = new Intl.DateTimeFormat('es-ES', { dateStyle: 'short', timeZone: 'Europe/Madrid' }).format(new Date())
 
   const filasHtml = filas.map(f => `
@@ -178,7 +220,7 @@ export async function sendResumenRetrasos(to: string, filas: FilaRetraso[]) {
       </div>
     </div>`
 
-  const transporter = createTransporter()
+  const { transporter, from } = await getMailer()
   await transporter.sendMail({
     from,
     to,
@@ -198,7 +240,6 @@ export interface DatosReclamacion {
 
 /** Reclamacion individual a CTT Express por un envio sin entregar tras +36h. */
 export async function sendReclamacionCTT(to: string, cc: string, d: DatosReclamacion) {
-  const from = process["env"].SMTP_FROM ?? 'CargoPrime <no-reply@cargoprime.es>'
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto;">
@@ -225,7 +266,7 @@ export async function sendReclamacionCTT(to: string, cc: string, d: DatosReclama
       </div>
     </div>`
 
-  const transporter = createTransporter()
+  const { transporter, from } = await getMailer()
   await transporter.sendMail({
     from,
     to,

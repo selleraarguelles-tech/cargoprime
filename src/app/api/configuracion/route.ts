@@ -19,7 +19,9 @@ const CTT_KEYS = [
 
 const TIKTOK_KEYS = ['tiktok_app_key', 'tiktok_app_secret', 'tiktok_redirect_uri']
 
-const ALL_KEYS = [...AMAZON_KEYS, ...CTT_KEYS, ...TIKTOK_KEYS]
+const EMAIL_KEYS = ['smtp_host', 'smtp_port', 'smtp_secure', 'smtp_user', 'smtp_pass', 'smtp_from']
+
+const ALL_KEYS = [...AMAZON_KEYS, ...CTT_KEYS, ...TIKTOK_KEYS, ...EMAIL_KEYS]
 
 export async function GET() {
   const session = await auth()

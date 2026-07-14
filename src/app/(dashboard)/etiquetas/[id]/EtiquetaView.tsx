@@ -23,9 +23,9 @@ interface Pedido {
   producto: { nombre: string; sku: string }
 }
 
-interface Props { pedido: Pedido; isAdmin?: boolean }
+interface Props { pedido: Pedido; isAdmin?: boolean; preferido?: 'ctt' | 'cex' }
 
-export default function EtiquetaView({ pedido, isAdmin = false }: Props) {
+export default function EtiquetaView({ pedido, isAdmin = false, preferido = 'ctt' }: Props) {
   const router = useRouter()
   const [marcando, setMarcando] = useState(false)
   const [generando, setGenerando] = useState(false)
@@ -92,22 +92,25 @@ export default function EtiquetaView({ pedido, isAdmin = false }: Props) {
                 {marcando ? 'Actualizando...' : 'Marcar como preparando'}
               </button>
             )}
+            {/* Alternativo (discreto) */}
             <button
-              onClick={() => generarEtiqueta('cex')}
+              onClick={() => generarEtiqueta(preferido === 'cex' ? 'ctt' : 'cex')}
               disabled={generando}
-              className="flex items-center gap-2 bg-[#ffcd00] hover:bg-[#f0c000] text-[#002453] px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60"
-              title="Graba el envío en Correos Express y descarga la etiqueta"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-60"
+              title="Usar el otro transportista solo para este pedido"
             >
               <Truck className="w-4 h-4" />
-              {generando ? 'Generando...' : 'Etiqueta Correos Express'}
+              {preferido === 'cex' ? 'Usar CTT Express' : 'Usar Correos Express'}
             </button>
+            {/* Preferido (principal, según configuración del cliente y canal) */}
             <button
-              onClick={() => generarEtiqueta('ctt')}
+              onClick={() => generarEtiqueta(preferido)}
               disabled={generando}
               className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60"
+              title="Transportista configurado para este cliente y canal"
             >
               <Truck className="w-4 h-4" />
-              {generando ? 'Generando etiqueta...' : 'Crear etiqueta CTT'}
+              {generando ? 'Generando etiqueta...' : `Crear etiqueta · ${preferido === 'cex' ? 'Correos Express' : 'CTT Express'}`}
             </button>
           </div>
         </div>

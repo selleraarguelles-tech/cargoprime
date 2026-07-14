@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import { notFound } from 'next/navigation'
+import { getTransportistaPreferido } from '@/lib/transportistaPref'
 import EtiquetaView from './EtiquetaView'
 
 export const dynamic = 'force-dynamic'
@@ -18,5 +19,7 @@ export default async function EtiquetaPage({ params }: Props) {
 
   if (!pedido) notFound()
 
-  return <EtiquetaView pedido={pedido} isAdmin={isAdmin} />
+  const preferido = await getTransportistaPreferido(pedido.clienteId, pedido.canal)
+
+  return <EtiquetaView pedido={pedido} isAdmin={isAdmin} preferido={preferido} />
 }

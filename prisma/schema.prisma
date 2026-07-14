@@ -22,6 +22,17 @@ model Cliente {
   rateCard       RateCard?
   facturas       Factura[]
   devoluciones   Devolucion[]
+  transportistas PreferenciaTransportista[]
+}
+
+model PreferenciaTransportista {
+  id            Int     @id @default(autoincrement())
+  clienteId     Int
+  canal         String  // 'amazon' | 'tiktok' | 'shopify'
+  transportista String  // 'ctt' | 'cex'
+  cliente       Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  @@unique([clienteId, canal])
 }
 
 model RateCard {

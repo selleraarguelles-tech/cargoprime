@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import ClienteForm from '../ClienteForm'
 import CopiarEnlaceButton from './CopiarEnlaceButton'
+import TransportistasCliente from './TransportistasCliente'
 import Link from 'next/link'
 import Badge from '@/components/Badge'
 import { ESTADOS_PEDIDO, formatDate } from '@/lib/utils'
@@ -22,10 +23,14 @@ export default async function EditarClientePage({ params }: Props) {
         orderBy: { createdAt: 'desc' },
         include: { producto: true },
       },
+      transportistas: true,
     },
   })
 
   if (!cliente) notFound()
+
+  const prefDe = (canal: string) =>
+    cliente.transportistas.find(t => t.canal === canal)?.transportista ?? 'ctt'
 
   return (
     <div className="p-6 space-y-6 max-w-3xl">
@@ -45,6 +50,11 @@ export default async function EditarClientePage({ params }: Props) {
       </div>
 
       <ClienteForm cliente={cliente} />
+
+      <TransportistasCliente
+        clienteId={cliente.id}
+        inicial={{ amazon: prefDe('amazon'), tiktok: prefDe('tiktok'), shopify: prefDe('shopify') }}
+      />
 
       {/* Productos */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">

@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { createCTTShipment, getCTTLabel } from '@/lib/ctt'
+import { createCexShipment } from '@/lib/correosExpress'
+import { getPreferenciasMap, CARRIER_LABELS } from '@/lib/transportistaPref'
 import { PDFDocument } from 'pdf-lib'
 
 export const maxDuration = 300
 
-// Genera las etiquetas CTT de varios pedidos en un único PDF, agrupadas por producto.
+// Genera las etiquetas de varios pedidos en un único PDF, agrupadas por producto.
+// Cada pedido usa el transportista configurado para su cliente+canal
+// (Clientes → ficha → Transportista por canal); sin configuración se usa CTT.
 export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
@@ -26,24 +30,37 @@ export async function POST(req: NextRequest) {
   })
   if (pedidos.length === 0) return NextResponse.json({ error: 'Pedidos no encontrados' }, { status: 404 })
 
+  const prefs = await getPreferenciasMap([...new Set(pedidos.map(p => p.clienteId))])
+
   const merged = await PDFDocument.create()
   const errores: string[] = []
   let generadas = 0
 
   for (const pedido of pedidos) {
+    const carrier = prefs.get(`${pedido.clienteId}:${pedido.canal}`) ?? 'ctt'
     try {
-      const shippingCode = await createCTTShipment({
+      const datos = {
         ...pedido,
         productoNombre: pedido.producto?.nombre ?? null,
         productoSku: pedido.producto?.sku ?? null,
-      })
-      const pdf = await getCTTLabel(shippingCode)
+      }
+
+      let trackingNumber: string
+      let pdf: Buffer | Uint8Array
+      if (carrier === 'cex') {
+        const r = await createCexShipment(datos)
+        trackingNumber = r.numEnvio
+        pdf = r.pdf
+      } else {
+        trackingNumber = await createCTTShipment(datos)
+        pdf = await getCTTLabel(trackingNumber)
+      }
 
       await prisma.pedido.update({
         where: { id: pedido.id },
         data: {
-          trackingNumber: shippingCode,
-          transportista: 'CTT Express',
+          trackingNumber,
+          transportista: CARRIER_LABELS[carrier],
           estado: pedido.estado === 'sin_etiqueta' ? 'preparando' : pedido.estado,
           enviadoAt: new Date(), // arranca el reloj de entrega (+36h) al generar la etiqueta
         },
@@ -55,7 +72,7 @@ export async function POST(req: NextRequest) {
       generadas++
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
-      errores.push(`${pedido.amazonOrderId}: ${msg}`)
+      errores.push(`${pedido.amazonOrderId} (${CARRIER_LABELS[carrier]}): ${msg}`)
     }
   }
 

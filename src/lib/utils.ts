@@ -4,6 +4,7 @@ export const CANALES: Record<string, { label: string; variant: 'default' | 'oran
   amazon: { label: 'Amazon', variant: 'orange' },
   tiktok: { label: 'TikTok Shop', variant: 'indigo' },
   shopify: { label: 'Shopify', variant: 'success' },
+  manual: { label: 'Manual', variant: 'info' },
 }
 
 export const ESTADOS_PEDIDO: Record<EstadoPedido, { label: string; variant: 'danger' | 'warning' | 'success' }> = {

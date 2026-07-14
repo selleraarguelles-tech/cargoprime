@@ -45,26 +45,6 @@ export default function NuevoPedidoForm({ clientes }: Props) {
     <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className={labelClass}>Nº Pedido Amazon *</label>
-          <input name="amazonOrderId" required placeholder="XXX-XXXXXXX-XXXXXXX" className={inputClass} />
-        </div>
-        <div>
-          <label className={labelClass}>Transportista</label>
-          <select name="transportista" className={inputClass}>
-            <option value="">Sin asignar</option>
-            <option>Correos</option>
-            <option>GLS</option>
-            <option>SEUR</option>
-            <option>MRW</option>
-            <option>DHL</option>
-            <option>UPS</option>
-            <option>FedEx</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
           <label className={labelClass}>Cliente *</label>
           <select name="clienteId" required value={clienteId} onChange={e => setClienteId(e.target.value)} className={inputClass}>
             <option value="">Seleccionar cliente</option>
@@ -72,12 +52,19 @@ export default function NuevoPedidoForm({ clientes }: Props) {
           </select>
         </div>
         <div>
-          <label className={labelClass}>Producto *</label>
-          <select name="productoId" required disabled={!clienteId} className={inputClass}>
-            <option value="">Seleccionar producto</option>
+          <label className={labelClass}>Producto</label>
+          <select name="productoId" disabled={!clienteId} className={inputClass}>
+            <option value="">Envío externo (sin producto del catálogo)</option>
             {productosCliente.map(p => <option key={p.id} value={p.id}>{p.nombre} ({p.sku})</option>)}
           </select>
+          <p className="text-xs text-gray-400 mt-1">Si eliges un producto se descuenta 1 ud. de stock; si no, no toca inventario.</p>
         </div>
+      </div>
+
+      <div>
+        <label className={labelClass}>Nº de pedido (opcional)</label>
+        <input name="amazonOrderId" placeholder="Déjalo vacío para un envío externo: se genera una referencia MAN-..." className={inputClass} />
+        <p className="text-xs text-gray-400 mt-1">Solo rellénalo si corresponde a un pedido real de Amazon.</p>
       </div>
 
       <hr className="border-gray-100" />
@@ -108,15 +95,10 @@ export default function NuevoPedidoForm({ clientes }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className={labelClass}>Peso (kg)</label>
-          <input name="peso" type="number" step="0.01" min="0" placeholder="0.50" className={inputClass} />
-        </div>
-        <div>
-          <label className={labelClass}>Nº Tracking</label>
-          <input name="trackingNumber" placeholder="Opcional" className={inputClass} />
-        </div>
+      <div>
+        <label className={labelClass}>Peso (kg)</label>
+        <input name="peso" type="number" step="0.01" min="0" placeholder="0.50" className={inputClass} />
+        <p className="text-xs text-gray-400 mt-1">Al crear el envío pasarás a la etiqueta, donde eliges CTT Express o Correos Express.</p>
       </div>
 
       {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}

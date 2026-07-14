@@ -238,6 +238,118 @@ export interface DatosReclamacion {
   destino: string
 }
 
+export interface LineaRecepcion {
+  sku: string
+  nombre: string
+  esperada: number
+  recibida: number
+}
+
+/** Aviso al cliente: su mercancía ha sido recibida en el almacén (con desglose y discrepancias). */
+export async function sendRecepcionEmail(
+  to: string,
+  clienteNombre: string,
+  envioId: number,
+  tracking: string,
+  lineas: LineaRecepcion[]
+) {
+  const discrepancias = lineas.filter(l => l.recibida !== l.esperada)
+  const filasHtml = lineas.map(l => {
+    const dif = l.recibida - l.esperada
+    const color = dif === 0 ? '#059669' : '#d97706'
+    return `
+    <tr>
+      <td style="padding: 6px 8px; border-bottom: 1px solid #f3f4f6; font-family: monospace; font-size: 12px;">${l.sku}</td>
+      <td style="padding: 6px 8px; border-bottom: 1px solid #f3f4f6; font-size: 12px;">${l.nombre}</td>
+      <td style="padding: 6px 8px; border-bottom: 1px solid #f3f4f6; font-size: 12px; text-align: right;">${l.esperada}</td>
+      <td style="padding: 6px 8px; border-bottom: 1px solid #f3f4f6; font-size: 12px; text-align: right; font-weight: bold;">${l.recibida}</td>
+      <td style="padding: 6px 8px; border-bottom: 1px solid #f3f4f6; font-size: 12px; text-align: right; color: ${color}; font-weight: bold;">${dif === 0 ? 'OK' : (dif > 0 ? '+' + dif : dif)}</td>
+    </tr>`
+  }).join('')
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto;">
+      ${cabeceraCargoPrime()}
+      <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: 0; border-radius: 0 0 8px 8px;">
+        <p style="color: #374151; margin: 0 0 16px;">Hola <strong>${clienteNombre}</strong>,</p>
+        <p style="color: #374151; margin: 0 0 20px;">
+          Hemos recibido tu mercancía en el almacén (envío entrante <strong>#${envioId}</strong>, seguimiento <span style="font-family: monospace;">${tracking}</span>). Este es el desglose:
+        </p>
+        <table style="width: 100%; border-collapse: collapse; margin: 0 0 20px;">
+          <tr style="background: #f8fafc;">
+            <th style="padding: 6px 8px; text-align: left; font-size: 11px; color: #64748b; text-transform: uppercase;">SKU</th>
+            <th style="padding: 6px 8px; text-align: left; font-size: 11px; color: #64748b; text-transform: uppercase;">Producto</th>
+            <th style="padding: 6px 8px; text-align: right; font-size: 11px; color: #64748b; text-transform: uppercase;">Esperado</th>
+            <th style="padding: 6px 8px; text-align: right; font-size: 11px; color: #64748b; text-transform: uppercase;">Recibido</th>
+            <th style="padding: 6px 8px; text-align: right; font-size: 11px; color: #64748b; text-transform: uppercase;">Dif.</th>
+          </tr>
+          ${filasHtml}
+        </table>
+        ${discrepancias.length > 0
+          ? `<p style="color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; font-size: 13px; margin: 0 0 16px;">
+              Hay <strong>${discrepancias.length}</strong> línea${discrepancias.length !== 1 ? 's' : ''} con diferencia entre lo esperado y lo recibido. Te recomendamos reclamarlo a tu proveedor o transitario cuanto antes.
+            </p>`
+          : `<p style="color: #065f46; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px; font-size: 13px; margin: 0 0 16px;">
+              Todo ha llegado según lo esperado. El stock ya está disponible para tus pedidos.
+            </p>`}
+        ${PIE_CARGOPRIME}
+      </div>
+    </div>`
+
+  const { transporter, from } = await getMailer()
+  await transporter.sendMail({
+    from,
+    to,
+    subject: discrepancias.length > 0
+      ? `Mercancía recibida con ${discrepancias.length} discrepancia${discrepancias.length !== 1 ? 's' : ''} - envío #${envioId}`
+      : `Mercancía recibida correctamente - envío #${envioId}`,
+    html,
+    text: `Hola ${clienteNombre},\n\nHemos recibido tu mercancía (envío #${envioId}, seguimiento ${tracking}).\n\n` +
+      lineas.map(l => `${l.sku} | ${l.nombre} | esperado ${l.esperada} | recibido ${l.recibida}`).join('\n') +
+      (discrepancias.length > 0 ? `\n\nHay ${discrepancias.length} línea(s) con diferencias: reclama a tu proveedor o transitario.` : '\n\nTodo correcto.') +
+      `\n\nCargoPrime | info@cargoprime.es`,
+  })
+}
+
+/** Aviso al cliente: su envío entrante lleva +48h de retraso sobre la fecha esperada. */
+export async function sendRetrasoEntranteEmail(
+  to: string,
+  clienteNombre: string,
+  envioId: number,
+  tracking: string,
+  transportista: string,
+  fechaEsperada: Date,
+  horasRetraso: number
+) {
+  const fechaTxt = new Intl.DateTimeFormat('es-ES', { dateStyle: 'long', timeZone: 'Europe/Madrid' }).format(fechaEsperada)
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto;">
+      ${cabeceraCargoPrime()}
+      <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: 0; border-radius: 0 0 8px 8px;">
+        <p style="color: #374151; margin: 0 0 16px;">Hola <strong>${clienteNombre}</strong>,</p>
+        <p style="color: #111827; margin: 0 0 20px;">
+          Tu envío entrante <strong>#${envioId}</strong> (${transportista}, seguimiento <span style="font-family: monospace;">${tracking}</span>)
+          estaba previsto para el <strong>${fechaTxt}</strong> y todavía no lo hemos recibido en el almacén
+          (<strong>${Math.floor(horasRetraso)} horas de retraso</strong>).
+        </p>
+        <p style="color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; font-size: 13px; margin: 0 0 16px;">
+          Te recomendamos <strong>contactar con tu transitario o proveedor</strong> para averiguar qué ha pasado y evitar quedarte sin stock.
+        </p>
+        <p style="color: #6b7280; font-size: 13px; margin: 0;">Te avisaremos en cuanto la mercancía llegue y esté disponible.</p>
+        ${PIE_CARGOPRIME}
+      </div>
+    </div>`
+
+  const { transporter, from } = await getMailer()
+  await transporter.sendMail({
+    from,
+    to,
+    subject: `Tu envío entrante #${envioId} lleva +48h de retraso - avisa a tu transitario`,
+    html,
+    text: `Hola ${clienteNombre},\n\nTu envío entrante #${envioId} (${transportista}, seguimiento ${tracking}) estaba previsto para el ${fechaTxt} y aún no lo hemos recibido (${Math.floor(horasRetraso)}h de retraso).\n\nTe recomendamos contactar con tu transitario o proveedor.\n\nCargoPrime | info@cargoprime.es`,
+  })
+}
+
 /** Reclamacion individual a CTT Express por un envio sin entregar tras +36h. */
 export async function sendReclamacionCTT(to: string, cc: string, d: DatosReclamacion) {
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { emailConfigurado, sendRecepcionEmail } from '@/lib/mail'
 
 interface Params { params: Promise<{ id: string }> }
 
@@ -23,7 +24,10 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const envio = await prisma.envio.findUnique({
     where: { id: envioId },
-    include: { lineas: { include: { producto: { select: { id: true, sku: true } } } } },
+    include: {
+      cliente: { select: { nombre: true, email: true } },
+      lineas: { include: { producto: { select: { id: true, sku: true, nombre: true } } } },
+    },
   })
   if (!envio) return NextResponse.json({ error: 'Envío no encontrado' }, { status: 404 })
   if (envio.recibidoAt) return NextResponse.json({ error: 'Este envío ya fue recibido' }, { status: 400 })
@@ -68,5 +72,28 @@ export async function POST(req: NextRequest, { params }: Params) {
   ])
 
   const discrepancias = envio.lineas.filter(l => porLinea.get(l.id)! !== l.cantidadEsperada).length
-  return NextResponse.json({ ok: true, lineas: envio.lineas.length, discrepancias })
+
+  // Aviso al cliente con el desglose de lo recibido (best-effort: no rompe la recepción)
+  let emailEnviado = false
+  if (envio.cliente.email && (await emailConfigurado())) {
+    try {
+      await sendRecepcionEmail(
+        envio.cliente.email,
+        envio.cliente.nombre,
+        envioId,
+        envio.trackingNumber,
+        envio.lineas.map(l => ({
+          sku: l.producto.sku,
+          nombre: l.producto.nombre,
+          esperada: l.cantidadEsperada,
+          recibida: porLinea.get(l.id)!,
+        }))
+      )
+      emailEnviado = true
+    } catch (e) {
+      console.error('[recibir] fallo email de recepción:', e instanceof Error ? e.message : e)
+    }
+  }
+
+  return NextResponse.json({ ok: true, lineas: envio.lineas.length, discrepancias, emailEnviado })
 }

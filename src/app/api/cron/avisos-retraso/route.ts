@@ -3,6 +3,7 @@ import { auth } from '@/auth'
 import { refreshCttTrackingPendientes } from '@/lib/refreshCttTracking'
 import { refreshCexTrackingPendientes } from '@/lib/correosExpress'
 import { avisarRetrasosEntrega } from '@/lib/avisosRetraso'
+import { avisarEntrantesRetrasados } from '@/lib/avisosEntrantes'
 
 export const maxDuration = 300
 
@@ -38,6 +39,14 @@ export async function GET(req: NextRequest) {
 
   const avisos = await avisarRetrasosEntrega()
 
-  console.log(`[cron/avisos-retraso] dia=${diaMadrid} cttActualizados=${ctt.actualizados} retrasados=${avisos.retrasados} reclamados=${avisos.reclamados} emails=${avisos.emails}`)
-  return NextResponse.json({ ok: true, dia: diaMadrid, cttTracking: ctt, avisosRetraso: avisos })
+  // Envíos entrantes con +48h de retraso sobre la fecha esperada → aviso al cliente
+  let entrantes = { retrasados: 0, avisados: 0 }
+  try {
+    entrantes = await avisarEntrantesRetrasados()
+  } catch (e) {
+    console.error('[avisos-retraso] entrantes fallo:', e instanceof Error ? e.message : e)
+  }
+
+  console.log(`[cron/avisos-retraso] dia=${diaMadrid} cttActualizados=${ctt.actualizados} retrasados=${avisos.retrasados} reclamados=${avisos.reclamados} entrantes48h=${entrantes.avisados} emails=${avisos.emails}`)
+  return NextResponse.json({ ok: true, dia: diaMadrid, cttTracking: ctt, avisosRetraso: avisos, entrantesRetrasados: entrantes })
 }

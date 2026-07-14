@@ -31,11 +31,11 @@ export default function EtiquetaView({ pedido, isAdmin = false }: Props) {
   const [generando, setGenerando] = useState(false)
   const [errorCTT, setErrorCTT] = useState('')
 
-  async function generarEtiquetaCTT() {
+  async function generarEtiqueta(carrier: 'ctt' | 'cex') {
     setGenerando(true)
     setErrorCTT('')
     try {
-      const res = await fetch(`/api/pedidos/${pedido.id}/ctt-label`, { method: 'POST' })
+      const res = await fetch(`/api/pedidos/${pedido.id}/${carrier}-label`, { method: 'POST' })
       if (!res.ok) {
         const data = await res.json()
         throw new Error(data.error ?? 'Error al generar etiqueta')
@@ -44,7 +44,7 @@ export default function EtiquetaView({ pedido, isAdmin = false }: Props) {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `etiqueta-${pedido.amazonOrderId}.pdf`
+      a.download = `etiqueta-${carrier}-${pedido.amazonOrderId}.pdf`
       a.click()
       URL.revokeObjectURL(url)
       router.refresh()
@@ -93,7 +93,16 @@ export default function EtiquetaView({ pedido, isAdmin = false }: Props) {
               </button>
             )}
             <button
-              onClick={generarEtiquetaCTT}
+              onClick={() => generarEtiqueta('cex')}
+              disabled={generando}
+              className="flex items-center gap-2 bg-[#ffcd00] hover:bg-[#f0c000] text-[#002453] px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60"
+              title="Graba el envío en Correos Express y descarga la etiqueta"
+            >
+              <Truck className="w-4 h-4" />
+              {generando ? 'Generando...' : 'Etiqueta Correos Express'}
+            </button>
+            <button
+              onClick={() => generarEtiqueta('ctt')}
               disabled={generando}
               className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60"
             >

@@ -6,7 +6,7 @@ import { ESTADOS_TRACKING } from '@/lib/utils'
 const LIMITE_HORAS = 36
 const CERRADOS = new Set([
   'Entregado', 'Entregado almacén regulador', 'DELIVERED',
-  'Devolución', 'Reexpedición', 'Envío anulado', 'RETURNED', 'No encontrado en CTT',
+  'Devolución', 'Reexpedición', 'Envío anulado', 'RETURNED', 'No encontrado en CTT', 'No encontrado en CEX',
 ])
 
 function celda(v: unknown): string {

@@ -31,6 +31,12 @@ export default function ConfiguracionPage() {
     smtp_user: '',
     smtp_pass: '',
     smtp_from: '',
+    cex_usuario: '',
+    cex_password: '',
+    cex_solicitante: '',
+    cex_codigo_cliente: '',
+    cex_producto: '63',
+    cex_sandbox: 'false',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -73,6 +79,12 @@ export default function ConfiguracionPage() {
           smtp_user: data.smtp_user ?? '',
           smtp_pass: data.smtp_pass ?? '',
           smtp_from: data.smtp_from ?? '',
+          cex_usuario: data.cex_usuario ?? '',
+          cex_password: data.cex_password ?? '',
+          cex_solicitante: data.cex_solicitante ?? '',
+          cex_codigo_cliente: data.cex_codigo_cliente ?? '',
+          cex_producto: data.cex_producto ?? '63',
+          cex_sandbox: data.cex_sandbox ?? 'false',
         }))
         if (data.amazon_redirect_uri_suggestion) setUriSuggestion(data.amazon_redirect_uri_suggestion)
         if (data.tiktok_redirect_uri_suggestion) setTiktokUriSuggestion(data.tiktok_redirect_uri_suggestion)
@@ -503,6 +515,84 @@ export default function ConfiguracionPage() {
               </div>
             </div>
           </div>
+
+          <div className="flex justify-end pt-1">
+            <button onClick={handleSave} disabled={saving} className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg disabled:opacity-60 transition-colors">
+              {saving ? 'Guardando...' : 'Guardar'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Correos Express */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+          <div className="bg-yellow-100 rounded-lg p-2">
+            <Truck className="w-5 h-5 text-yellow-700" />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-semibold text-gray-900">Correos Express</h2>
+            <p className="text-xs text-gray-500">Segundo transportista: crear envíos y descargar etiquetas desde los pedidos</p>
+          </div>
+          {form.cex_usuario && form.cex_password && form.cex_solicitante && (
+            <span className="flex items-center gap-1.5 text-xs text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
+              <CheckCircle className="w-3.5 h-3.5" /> Configurado
+            </span>
+          )}
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-medium text-gray-700">Entorno</label>
+            <select
+              value={form.cex_sandbox}
+              onChange={e => setForm(f => ({ ...f, cex_sandbox: e.target.value }))}
+              className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+            >
+              <option value="true">Test (pruebas)</option>
+              <option value="false">Producción</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>Usuario</label>
+              <input value={form.cex_usuario} onChange={e => setForm(f => ({ ...f, cex_usuario: e.target.value }))} className={inputClass} placeholder="A99999999_WS" />
+            </div>
+            <div>
+              <label className={labelClass}>Contraseña</label>
+              <div className="relative">
+                <input type={showSecret ? 'text' : 'password'} value={form.cex_password} onChange={e => setForm(f => ({ ...f, cex_password: e.target.value }))} className={`${inputClass} pr-10`} placeholder="••••••" />
+                <button type="button" onClick={() => setShowSecret(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>Código solicitante</label>
+              <input value={form.cex_solicitante} onChange={e => setForm(f => ({ ...f, cex_solicitante: e.target.value }))} className={inputClass} placeholder="IA99999999" />
+            </div>
+            <div>
+              <label className={labelClass}>Código de cliente</label>
+              <input value={form.cex_codigo_cliente} onChange={e => setForm(f => ({ ...f, cex_codigo_cliente: e.target.value }))} className={inputClass} placeholder="A99999999" />
+            </div>
+            <div className="col-span-2">
+              <label className={labelClass}>Producto por defecto</label>
+              <select
+                value={form.cex_producto}
+                onChange={e => setForm(f => ({ ...f, cex_producto: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+              >
+                <option value="61">61 · PAQ 10 (antes de las 10h)</option>
+                <option value="62">62 · PAQ 14 (antes de las 14h)</option>
+                <option value="63">63 · PAQ 24 (día siguiente)</option>
+                <option value="24">24 · Paq E-commerce</option>
+                <option value="92">92 · PAQ Empresa 14</option>
+                <option value="93">93 · ePAQ 24</option>
+              </select>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-400">Los datos del remitente (almacén) se toman de la sección de CTT Express de arriba — rellénalos allí si aún no lo están.</p>
 
           <div className="flex justify-end pt-1">
             <button onClick={handleSave} disabled={saving} className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg disabled:opacity-60 transition-colors">

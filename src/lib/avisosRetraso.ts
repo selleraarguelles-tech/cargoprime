@@ -9,7 +9,7 @@ const MAX_RECLAMACIONES_POR_EJECUCION = 15
 // Estados cerrados: no cuentan como pendientes de entrega
 const CERRADOS = [
   'Entregado', 'Entregado almacén regulador', 'DELIVERED',
-  'Devolución', 'Reexpedición', 'Envío anulado', 'RETURNED', 'No encontrado en CTT',
+  'Devolución', 'Reexpedición', 'Envío anulado', 'RETURNED', 'No encontrado en CTT', 'No encontrado en CEX',
 ]
 
 function fechaES(d: Date): string {

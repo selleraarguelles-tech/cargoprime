@@ -6,6 +6,7 @@ import { getAccessToken, getRecentUnshippedOrders, getOrderItems, getOrderAddres
 import { syncStockForCuenta } from '@/lib/syncStock'
 import { syncTrackingForCuenta } from '@/lib/syncTracking'
 import { refreshCttTrackingPendientes } from '@/lib/refreshCttTracking'
+import { refreshCexTrackingPendientes } from '@/lib/correosExpress'
 import { confirmShipmentsForCuenta } from '@/lib/confirmShipmentAmazon'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
@@ -145,6 +146,14 @@ export async function GET(req: NextRequest) {
     allErrors.push(`CTT tracking: ${e instanceof Error ? e.message : String(e)}`)
   }
 
+  // Ídem para los envíos de Correos Express
+  let cex = { revisados: 0, actualizados: 0, errores: 0 }
+  try {
+    cex = await refreshCexTrackingPendientes()
+  } catch (e: unknown) {
+    allErrors.push(`CEX tracking: ${e instanceof Error ? e.message : String(e)}`)
+  }
+
   // Los avisos/reclamaciones por email se envían en el cron de medianoche
   // (/api/cron/avisos-retraso), solo en días laborables.
 
@@ -155,6 +164,6 @@ export async function GET(req: NextRequest) {
     create: { clave: 'cron_last_sync_at', valor: syncStartedAt },
   })
 
-  console.log(`[cron/sync-orders] since=${since.toISOString()} creados=${totalCreados} actualizados=${totalActualizados} confirmadosAmazon=${totalConfirmados} cttRevisados=${ctt.revisados} cttActualizados=${ctt.actualizados} errores=${allErrors.length}`)
-  return NextResponse.json({ ok: true, since: since.toISOString(), totalCreados, totalActualizados, totalConfirmados, cttTracking: ctt, errores: allErrors.slice(0, 10) })
+  console.log(`[cron/sync-orders] since=${since.toISOString()} creados=${totalCreados} actualizados=${totalActualizados} confirmadosAmazon=${totalConfirmados} cttActualizados=${ctt.actualizados} cexActualizados=${cex.actualizados} errores=${allErrors.length}`)
+  return NextResponse.json({ ok: true, since: since.toISOString(), totalCreados, totalActualizados, totalConfirmados, cttTracking: ctt, cexTracking: cex, errores: allErrors.slice(0, 10) })
 }

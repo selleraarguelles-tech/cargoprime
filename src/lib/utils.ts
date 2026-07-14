@@ -35,6 +35,8 @@ export const ESTADOS_TRACKING: Record<string, { label: string; variant: 'danger'
   'Envío anulado': { label: 'Envío anulado', variant: 'danger' },
   'Devolución': { label: 'Devolución', variant: 'danger' },
   'Mal transitado': { label: 'Incidencia en tránsito', variant: 'danger' },
+  // Correos Express (estados normalizados en lib/correosExpress.ts)
+  'No encontrado en CEX': { label: 'No encontrado en CEX', variant: 'default' },
 }
 
 export function formatDate(date: string | Date) {

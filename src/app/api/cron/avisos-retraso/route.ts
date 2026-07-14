@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { refreshCttTrackingPendientes } from '@/lib/refreshCttTracking'
+import { refreshCexTrackingPendientes } from '@/lib/correosExpress'
 import { avisarRetrasosEntrega } from '@/lib/avisosRetraso'
 
 export const maxDuration = 300
@@ -28,6 +29,11 @@ export async function GET(req: NextRequest) {
     ctt = await refreshCttTrackingPendientes()
   } catch (e) {
     console.error('[avisos-retraso] refresh CTT fallo:', e instanceof Error ? e.message : e)
+  }
+  try {
+    await refreshCexTrackingPendientes()
+  } catch (e) {
+    console.error('[avisos-retraso] refresh CEX fallo:', e instanceof Error ? e.message : e)
   }
 
   const avisos = await avisarRetrasosEntrega()

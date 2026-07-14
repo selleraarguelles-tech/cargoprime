@@ -21,7 +21,9 @@ const TIKTOK_KEYS = ['tiktok_app_key', 'tiktok_app_secret', 'tiktok_redirect_uri
 
 const EMAIL_KEYS = ['smtp_host', 'smtp_port', 'smtp_secure', 'smtp_user', 'smtp_pass', 'smtp_from']
 
-const ALL_KEYS = [...AMAZON_KEYS, ...CTT_KEYS, ...TIKTOK_KEYS, ...EMAIL_KEYS]
+const CEX_KEYS = ['cex_usuario', 'cex_password', 'cex_solicitante', 'cex_codigo_cliente', 'cex_producto', 'cex_sandbox']
+
+const ALL_KEYS = [...AMAZON_KEYS, ...CTT_KEYS, ...TIKTOK_KEYS, ...EMAIL_KEYS, ...CEX_KEYS]
 
 export async function GET() {
   const session = await auth()

@@ -82,9 +82,23 @@ model Envio {
   estado         String    @default("en_transito")
   ultimoEvento   String?
   ultimaRevision DateTime?
+  recibidoAt     DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   cliente        Cliente   @relation(fields: [clienteId], references: [id])
+  lineas         EnvioLinea[]
+}
+
+model EnvioLinea {
+  id                Int      @id @default(autoincrement())
+  envioId           Int
+  productoId        Int
+  cantidadEsperada  Int
+  cantidadRecibida  Int?     // null hasta que se recibe
+  envio             Envio    @relation(fields: [envioId], references: [id], onDelete: Cascade)
+  producto          Producto @relation(fields: [productoId], references: [id])
+
+  @@unique([envioId, productoId])
 }
 
 model CuentaAmazon {
@@ -142,6 +156,7 @@ model Producto {
   cliente             Cliente           @relation(fields: [clienteId], references: [id])
   pedidos             Pedido[]
   movimientos         MovimientoStock[]
+  envioLineas         EnvioLinea[]
 }
 
 model Pedido {

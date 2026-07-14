@@ -2,7 +2,8 @@
 
 import { useState, useEffect, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, RefreshCw, ExternalLink, Trash2, Package, ChevronDown, ChevronUp, X } from 'lucide-react'
+import Link from 'next/link'
+import { Plus, RefreshCw, ExternalLink, Trash2, Package, ChevronDown, ChevronUp, X, ClipboardCheck } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
 interface Envio {
@@ -282,12 +283,21 @@ export default function EnviosClient({ envios: initial, clientes, transportistas
                       </button>
                     )}
                     {isAdmin && (
-                      <button
-                        onClick={() => handleDelete(envio.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <>
+                        <Link
+                          href={`/envios/${envio.id}`}
+                          title="Recepción: líneas esperadas y entrada a stock"
+                          className="p-1.5 text-gray-400 hover:text-emerald-600 transition-colors"
+                        >
+                          <ClipboardCheck className="w-4 h-4" />
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(envio.id)}
+                          className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>

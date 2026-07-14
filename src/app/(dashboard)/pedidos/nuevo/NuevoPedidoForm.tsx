@@ -20,7 +20,9 @@ export default function NuevoPedidoForm({ clientes }: Props) {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const data = Object.fromEntries(new FormData(e.currentTarget))
+    const data = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+    const carrier = data.carrier // 'ctt' | 'cex' | '' (elegir después)
+    delete data.carrier
 
     const res = await fetch('/api/pedidos', {
       method: 'POST',
@@ -28,14 +30,36 @@ export default function NuevoPedidoForm({ clientes }: Props) {
       body: JSON.stringify(data),
     })
 
-    if (res.ok) {
-      const pedido = await res.json()
-      router.push(`/etiquetas/${pedido.id}`)
-    } else {
+    if (!res.ok) {
       const err = await res.json()
       setError(err.error ?? 'Error al crear el pedido')
       setLoading(false)
+      return
     }
+
+    const pedido = await res.json()
+
+    // Si se eligió compañía, se genera y descarga la etiqueta directamente
+    if (carrier === 'ctt' || carrier === 'cex') {
+      try {
+        const lres = await fetch(`/api/pedidos/${pedido.id}/${carrier}-label`, { method: 'POST' })
+        if (!lres.ok) {
+          const d = await lres.json().catch(() => ({}))
+          throw new Error(d.error ?? 'Error al generar la etiqueta')
+        }
+        const blob = await lres.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `etiqueta-${carrier}-${pedido.amazonOrderId}.pdf`
+        a.click()
+        URL.revokeObjectURL(url)
+      } catch (err) {
+        alert(`El envío se creó, pero la etiqueta falló: ${err instanceof Error ? err.message : 'error'}. Puedes reintentarlo desde la vista de etiqueta.`)
+      }
+    }
+
+    router.push(`/etiquetas/${pedido.id}`)
   }
 
   const inputClass = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
@@ -95,10 +119,20 @@ export default function NuevoPedidoForm({ clientes }: Props) {
         </div>
       </div>
 
-      <div>
-        <label className={labelClass}>Peso (kg)</label>
-        <input name="peso" type="number" step="0.01" min="0" placeholder="0.50" className={inputClass} />
-        <p className="text-xs text-gray-400 mt-1">Al crear el envío pasarás a la etiqueta, donde eliges CTT Express o Correos Express.</p>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={labelClass}>Peso (kg)</label>
+          <input name="peso" type="number" step="0.01" min="0" placeholder="0.50" className={inputClass} />
+        </div>
+        <div>
+          <label className={labelClass}>Compañía de envío</label>
+          <select name="carrier" className={inputClass}>
+            <option value="">Elegir después (en la etiqueta)</option>
+            <option value="ctt">CTT Express</option>
+            <option value="cex">Correos Express</option>
+          </select>
+          <p className="text-xs text-gray-400 mt-1">Si eliges una, la etiqueta se genera y descarga al crear el envío.</p>
+        </div>
       </div>
 
       {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}

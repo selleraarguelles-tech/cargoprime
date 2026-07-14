@@ -229,6 +229,8 @@ export interface AmazonOrderItem {
   OrderItemId: string
   Title: string
   QuantityOrdered: number
+  // Precio TOTAL de la línea (unidades × precio unitario), sin envío
+  ItemPrice?: { CurrencyCode: string; Amount: string }
 }
 
 async function fetchOrdersFrom(

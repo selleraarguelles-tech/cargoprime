@@ -87,11 +87,17 @@ export async function GET(req: NextRequest) {
             })
           }
 
+          // Precio real de la línea (para el P&L): total y cantidad reales de Amazon
+          const importe = firstItem.ItemPrice?.Amount ? parseFloat(firstItem.ItemPrice.Amount) : null
+
           await prisma.pedido.create({
             data: {
               amazonOrderId: order.AmazonOrderId,
               clienteId: cuenta.clienteId,
               productoId: producto.id,
+              cantidad: firstItem.QuantityOrdered || 1,
+              importe: importe !== null && Number.isFinite(importe) ? importe : null,
+              moneda: firstItem.ItemPrice?.CurrencyCode ?? null,
               destinatarioNombre: address?.Name ?? 'Sin nombre',
               destinatarioDireccion: [address?.AddressLine1, address?.AddressLine2]
                 .filter(Boolean).join(', ') || 'Sin dirección',

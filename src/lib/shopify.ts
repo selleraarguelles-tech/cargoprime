@@ -13,6 +13,8 @@ export interface ShopifyLineItem {
   sku?: string
   title: string
   quantity: number
+  // Precio unitario (string decimal, p. ej. "12.90")
+  price?: string
 }
 
 export interface ShopifyOrder {
@@ -21,6 +23,7 @@ export interface ShopifyOrder {
   created_at: string
   fulfillment_status: string | null
   financial_status: string
+  currency?: string
   shipping_address?: ShopifyAddress
   line_items: ShopifyLineItem[]
 }

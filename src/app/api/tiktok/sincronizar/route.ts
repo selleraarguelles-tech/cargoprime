@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
             canal: 'tiktok',
             clienteId: cuenta.clienteId,
             productoId: producto.id,
+            cantidad: firstItem.quantity || 1,
             destinatarioNombre: address?.name ?? 'Sin nombre',
             destinatarioDireccion: address?.full_address ?? 'Sin dirección',
             destinatarioCP: address?.postal_code ?? '',

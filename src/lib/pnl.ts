@@ -42,20 +42,31 @@ function periodoRango(periodo: string): { desde: Date; hasta: Date } {
 
 /**
  * P&L por SKU de un cliente en un periodo 'YYYY-MM'.
- * Nota v1: cada pedido cuenta como 1 unidad del producto asociado (no se guarda cantidad por línea).
- * Fulfillment = tarifaPedido del RateCard del cliente × unidades.
+ * Ingresos: usa el importe REAL del pedido cuando el sync lo capturó; para pedidos
+ * sin importe (antiguos o importados sin precio) aplica precioVenta × unidades.
+ * Fulfillment = tarifaPedido del RateCard del cliente × nº de pedidos.
  */
 export async function calcularPnL(clienteId: number, periodo: string): Promise<PnLResumen> {
   const { desde, hasta } = periodoRango(periodo)
+  const wherePeriodo = { clienteId, createdAt: { gte: desde, lt: hasta } }
 
-  const [grupos, rateCard] = await Promise.all([
+  const [grupos, sinImporte, rateCard] = await Promise.all([
     prisma.pedido.groupBy({
       by: ['productoId'],
-      where: { clienteId, createdAt: { gte: desde, lt: hasta } },
+      where: wherePeriodo,
       _count: { id: true },
+      _sum: { cantidad: true, importe: true },
+    }),
+    // Unidades de pedidos SIN importe real → se estiman con precioVenta
+    prisma.pedido.groupBy({
+      by: ['productoId'],
+      where: { ...wherePeriodo, importe: null },
+      _sum: { cantidad: true },
     }),
     prisma.rateCard.findUnique({ where: { clienteId }, select: { tarifaPedido: true } }),
   ])
+
+  const sinImporteById = new Map(sinImporte.map(g => [g.productoId, g._sum.cantidad ?? 0]))
 
   const tarifaPedido = rateCard?.tarifaPedido ?? 0
 
@@ -69,15 +80,20 @@ export async function calcularPnL(clienteId: number, periodo: string): Promise<P
 
   const filas: PnLRow[] = grupos.map(g => {
     const p = byId.get(g.productoId)
-    const unidades = g._count.id
+    const pedidos = g._count.id
+    const unidades = g._sum.cantidad ?? pedidos
     const precioVenta = p?.precioVenta ?? 0
     const costeUnitario = p?.costeUnitario ?? 0
     const comisionPct = p?.comisionAmazon ?? 0
 
-    const ingresos = round(unidades * precioVenta)
+    // Ingresos: importes reales capturados + estimación (precioVenta) para lo que no tiene importe
+    const ingresosReales = g._sum.importe ?? 0
+    const unidadesEstimadas = sinImporteById.get(g.productoId) ?? 0
+    const ingresos = round(ingresosReales + unidadesEstimadas * precioVenta)
     const coste = round(unidades * costeUnitario)
     const comision = round((ingresos * comisionPct) / 100)
-    const fulfillment = round(unidades * tarifaPedido)
+    // Se factura por pedido preparado, no por unidad
+    const fulfillment = round(pedidos * tarifaPedido)
     const beneficio = round(ingresos - coste - comision - fulfillment)
     const margenPct = ingresos > 0 ? round((beneficio / ingresos) * 100) : null
 

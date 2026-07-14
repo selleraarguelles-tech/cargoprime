@@ -23,10 +23,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const debeReingresar = estado === 'recibida' && reingresar === true && !dev.reingresado
 
   if (debeReingresar) {
+    const uds = dev.pedido.cantidad || 1
     await prisma.$transaction([
-      prisma.producto.update({ where: { id: dev.pedido.productoId }, data: { stockActual: { increment: 1 } } }),
+      prisma.producto.update({ where: { id: dev.pedido.productoId }, data: { stockActual: { increment: uds } } }),
       prisma.movimientoStock.create({
-        data: { productoId: dev.pedido.productoId, tipo: 'entrada', cantidad: 1, nota: `Devolución pedido ${dev.pedido.amazonOrderId}` },
+        data: { productoId: dev.pedido.productoId, tipo: 'entrada', cantidad: uds, nota: `Devolución pedido ${dev.pedido.amazonOrderId}` },
       }),
       prisma.devolucion.update({
         where: { id: devId },

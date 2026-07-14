@@ -40,6 +40,7 @@ const CAMPOS: Record<string, string[]> = {
   producto: ['product name', 'item name', 'sku name', 'producto', 'nombre del producto', 'artículo', 'articulo', 'título', 'titulo'],
   sku: ['seller sku', 'seller_sku', 'sku', 'referencia', 'ref'],
   cantidad: ['quantity', 'qty', 'cantidad'],
+  importe: ['order amount', 'total amount', 'sku subtotal after discount', 'subtotal', 'total', 'importe', 'precio total', 'amount'],
 }
 
 function mapearColumnas(headers: string[]): Record<string, number> {
@@ -104,12 +105,19 @@ export async function POST(req: NextRequest) {
         create: { sku, nombre: nombreProd.slice(0, 100), clienteId, stockActual: 0 },
       })
 
+      // Cantidad e importe (si el CSV los trae): el importe acepta "12,90", "12.90" o "€12.90"
+      const cantidad = Math.max(1, parseInt(val(r, 'cantidad')) || 1)
+      const importeRaw = val(r, 'importe').replace(/[^\d.,-]/g, '').replace(',', '.')
+      const importe = importeRaw ? parseFloat(importeRaw) : NaN
+
       await prisma.pedido.create({
         data: {
           amazonOrderId: orderId,
           canal,
           clienteId,
           productoId: producto.id,
+          cantidad,
+          importe: Number.isFinite(importe) && importe >= 0 ? importe : null,
           destinatarioNombre: val(r, 'nombre') || 'Sin nombre',
           destinatarioDireccion: val(r, 'direccion') || 'Sin dirección',
           destinatarioCP: val(r, 'cp'),

@@ -145,6 +145,9 @@ model Pedido {
   destinatarioCiudad    String
   destinatarioPais      String   @default("España")
   peso                  Float?
+  cantidad              Int      @default(1)
+  importe               Float?
+  moneda                String?
   transportista         String?
   trackingNumber        String?
   trackingEstado        String?

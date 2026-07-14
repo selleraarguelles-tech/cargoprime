@@ -75,11 +75,16 @@ export async function POST(req: NextRequest) {
           })
         }
 
+        const importe = firstItem.ItemPrice?.Amount ? parseFloat(firstItem.ItemPrice.Amount) : null
+
         await prisma.pedido.create({
           data: {
             amazonOrderId: order.AmazonOrderId,
             clienteId: cuenta.clienteId,
             productoId: producto.id,
+            cantidad: firstItem.QuantityOrdered || 1,
+            importe: importe !== null && Number.isFinite(importe) ? importe : null,
+            moneda: firstItem.ItemPrice?.CurrencyCode ?? null,
             destinatarioNombre: address?.Name ?? 'Sin nombre',
             destinatarioDireccion: [address?.AddressLine1, address?.AddressLine2]
               .filter(Boolean).join(', ') || 'Sin dirección',

@@ -52,12 +52,18 @@ export async function POST(req: NextRequest) {
 
         const address = order.shipping_address
 
+        const cantidad = firstItem.quantity || 1
+        const precioUnit = firstItem.price ? parseFloat(firstItem.price) : null
+
         await prisma.pedido.create({
           data: {
             amazonOrderId: orderId,
             canal: 'shopify',
             clienteId: cuenta.clienteId,
             productoId: producto.id,
+            cantidad,
+            importe: precioUnit !== null && Number.isFinite(precioUnit) ? precioUnit * cantidad : null,
+            moneda: order.currency ?? null,
             destinatarioNombre: address?.name ?? 'Sin nombre',
             destinatarioDireccion: [address?.address1, address?.address2].filter(Boolean).join(', ') || 'Sin dirección',
             destinatarioCP: address?.zip ?? '',

@@ -219,6 +219,18 @@ model Configuracion {
   valor String
 }
 
+model Notificacion {
+  id        Int       @id @default(autoincrement())
+  tipo      String    // stock | retraso36 | entrante48 | recepcion | devolucion
+  titulo    String
+  mensaje   String?
+  href      String?
+  leidaAt   DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([leidaAt, createdAt])
+}
+
 model User {
   id               Int       @id @default(autoincrement())
   username         String    @unique

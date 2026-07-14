@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { emailConfigurado, sendRecepcionEmail } from '@/lib/mail'
+import { notificar } from '@/lib/notificaciones'
 
 interface Params { params: Promise<{ id: string }> }
 
@@ -72,6 +73,15 @@ export async function POST(req: NextRequest, { params }: Params) {
   ])
 
   const discrepancias = envio.lineas.filter(l => porLinea.get(l.id)! !== l.cantidadEsperada).length
+
+  if (discrepancias > 0) {
+    await notificar(
+      'recepcion',
+      `Recepción #${envioId} con ${discrepancias} discrepancia${discrepancias !== 1 ? 's' : ''}`,
+      `${envio.cliente.nombre} · revisar esperado vs recibido`,
+      `/envios/${envioId}`
+    )
+  }
 
   // Aviso al cliente con el desglose de lo recibido (best-effort: no rompe la recepción)
   let emailEnviado = false

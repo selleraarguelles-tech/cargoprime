@@ -1,5 +1,6 @@
 import { prisma } from './prisma'
 import { emailConfigurado, sendRetrasoEntranteEmail } from './mail'
+import { notificar } from './notificaciones'
 
 const LIMITE_HORAS = 48
 
@@ -23,6 +24,16 @@ export async function avisarEntrantesRetrasados(): Promise<{ retrasados: number;
   })
 
   if (retrasados.length === 0) return { retrasados: 0, avisados: 0 }
+
+  for (const envio of retrasados) {
+    await notificar(
+      'entrante48',
+      `Entrante #${envio.id} con +48h de retraso`,
+      `${envio.cliente.nombre} · ${envio.transportista} · ${envio.trackingNumber}`,
+      `/envios/${envio.id}`
+    )
+  }
+
   if (!(await emailConfigurado())) {
     console.warn('[avisosEntrantes] SMTP sin configurar:', retrasados.length, 'entrantes +48h sin avisar')
     return { retrasados: retrasados.length, avisados: 0 }

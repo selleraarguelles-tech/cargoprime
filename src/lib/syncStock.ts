@@ -1,6 +1,7 @@
 import { prisma } from './prisma'
 import { getListingStock } from './spapi'
 import { sendLowStockEmail, emailConfigurado } from './mail'
+import { notificar } from './notificaciones'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
@@ -34,6 +35,7 @@ export async function syncStockForCuenta(
 
     if (bajoMinimo && !producto.notificadoStockBajo) {
       data.notificadoStockBajo = true
+      await notificar('stock', `Stock bajo: ${producto.nombre}`, `${producto.sku} · ${cliente?.nombre ?? ''} · quedan ${qty} uds (mín. ${producto.stockMinimo})`, '/inventario')
       if (puedeAvisar) {
         try {
           await sendLowStockEmail(cliente!.email, cliente!.nombre, producto.nombre, producto.sku, qty, producto.stockMinimo)

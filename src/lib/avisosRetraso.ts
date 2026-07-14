@@ -1,5 +1,6 @@
 import { prisma } from './prisma'
 import { emailConfigurado, sendResumenRetrasos, sendReclamacionCTT, type FilaRetraso } from './mail'
+import { notificar } from './notificaciones'
 
 const EMAIL_INTERNO = 'info@cargoprime.es'
 const EMAIL_CTT = 'cca.z6@cttexpress.com'
@@ -37,6 +38,13 @@ export async function avisarRetrasosEntrega(): Promise<{ retrasados: number; rec
 
   const retrasados = candidatos.filter(p => (p.enviadoAt ?? p.createdAt) < limite)
   if (retrasados.length === 0) return { retrasados: 0, reclamados: 0, emails: false }
+
+  await notificar(
+    'retraso36',
+    `${retrasados.length} envío${retrasados.length !== 1 ? 's' : ''} con +36h sin entregar`,
+    'Revisa el detalle y las reclamaciones a CTT en Seguimiento',
+    '/seguimiento?retraso=1'
+  )
 
   if (!(await emailConfigurado())) {
     console.warn('[avisosRetraso] SMTP no configurado: hay', retrasados.length, 'envíos +36h sin avisar')

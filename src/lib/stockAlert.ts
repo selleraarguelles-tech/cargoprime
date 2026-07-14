@@ -1,5 +1,6 @@
 import { prisma } from './prisma'
 import { sendLowStockEmail, emailConfigurado } from './mail'
+import { notificar } from './notificaciones'
 
 /**
  * Revisa un producto tras un cambio de stock:
@@ -17,6 +18,7 @@ export async function evaluarAlertaStock(productoId: number): Promise<void> {
   const bajoMinimo = p.stockActual <= p.stockMinimo
 
   if (bajoMinimo && !p.notificadoStockBajo) {
+    await notificar('stock', `Stock bajo: ${p.nombre}`, `${p.sku} · ${p.cliente.nombre} · quedan ${p.stockActual} uds (mín. ${p.stockMinimo})`, '/inventario')
     if ((await emailConfigurado()) && p.cliente.email) {
       try {
         await sendLowStockEmail(p.cliente.email, p.cliente.nombre, p.nombre, p.sku, p.stockActual, p.stockMinimo)

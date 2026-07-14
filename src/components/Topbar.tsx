@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
-import { Search, Bell, Settings, UserCircle } from 'lucide-react'
+import { Search, Settings, UserCircle } from 'lucide-react'
+import CampanaNotificaciones from './CampanaNotificaciones'
 
 interface Props {
   user: { name: string; role: string }
@@ -34,9 +35,7 @@ export default function Topbar({ user, isAdmin }: Props) {
       </form>
 
       <div className="flex items-center gap-1 shrink-0">
-        <button className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors relative" title="Notificaciones">
-          <Bell className="w-[18px] h-[18px]" />
-        </button>
+        <CampanaNotificaciones />
         {isAdmin && (
           <Link href="/configuracion" className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Configuración">
             <Settings className="w-[18px] h-[18px]" />

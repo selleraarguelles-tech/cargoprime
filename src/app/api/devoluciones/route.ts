@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { notificar } from '@/lib/notificaciones'
 
 // Crea una devolución a partir del nº de pedido (amazonOrderId).
 export async function POST(req: NextRequest) {
@@ -20,6 +21,8 @@ export async function POST(req: NextRequest) {
       motivo: motivo ? String(motivo) : null,
     },
   })
+
+  await notificar('devolucion', `Nueva devolución: pedido ${pedido.amazonOrderId}`, motivo ? String(motivo) : undefined, '/devoluciones')
 
   return NextResponse.json(devolucion, { status: 201 })
 }

@@ -4,6 +4,9 @@ import Link from 'next/link'
 import Badge from '@/components/Badge'
 import { ESTADOS_PEDIDO, CANALES, formatDateTime } from '@/lib/utils'
 import { entregadoEnPlazo } from '@/lib/sla'
+import PedidosPorDia from '@/components/charts/PedidosPorDia'
+import PedidosPorCanal from '@/components/charts/PedidosPorCanal'
+import EstadoEnvios from '@/components/charts/EstadoEnvios'
 
 export const dynamic = 'force-dynamic'
 
@@ -105,7 +108,6 @@ async function getMetrics() {
 
 export default async function DashboardPage() {
   const m = await getMetrics()
-  const maxDia = Math.max(1, ...m.dias.map(d => d.count))
 
   const metrics = [
     { label: 'Pedidos hoy', value: m.pedidosHoy, icon: ShoppingCart, color: 'bg-blue-500', href: '/pedidos' },
@@ -122,8 +124,6 @@ export default async function DashboardPage() {
       alert: m.sla.pctEnPlazo !== null && m.sla.pctEnPlazo < 85,
     },
   ]
-
-  const canalColor: Record<string, string> = { amazon: 'bg-orange-400', tiktok: 'bg-gray-800', shopify: 'bg-green-500' }
 
   return (
     <div className="p-6 space-y-6">
@@ -182,65 +182,27 @@ export default async function DashboardPage() {
             Pedidos por día
           </h2>
           <p className="text-xs text-gray-400 mb-4">Últimos 14 días</p>
-          <div className="h-40 flex items-end gap-1.5">
-            {m.dias.map(d => (
-              <div key={d.clave} className="flex-1 h-full flex items-end relative group" title={`${d.label}: ${d.count} pedidos`}>
-                <div
-                  className={`w-full rounded-t transition-colors ${d.count > 0 ? 'bg-orange-400 group-hover:bg-orange-500' : 'bg-gray-100'}`}
-                  style={{ height: `${maxDia > 0 ? Math.max(3, (d.count / maxDia) * 100) : 3}%` }}
-                />
-                <span className="absolute -top-4 left-0 right-0 text-center text-[10px] font-medium text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">{d.count}</span>
-              </div>
-            ))}
-          </div>
-          <div className="flex gap-1.5 mt-1.5">
-            {m.dias.map(d => (
-              <span key={d.clave} className="flex-1 text-center text-[10px] text-gray-400">{d.label}</span>
-            ))}
-          </div>
+          <PedidosPorDia dias={m.dias} />
         </div>
 
         {/* Por canal + estado de envíos */}
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-sm border border-[#e4e8f0] p-6">
             <h2 className="font-semibold text-gray-900 text-sm mb-3">Pedidos por canal <span className="text-xs font-normal text-gray-400">(30 días)</span></h2>
-            {m.total30d === 0 ? (
-              <p className="text-sm text-gray-400">Sin pedidos en el período</p>
-            ) : (
-              <div className="space-y-2.5">
-                {m.porCanal.map(([canal, count]) => (
-                  <div key={canal}>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="font-medium text-gray-700">{CANALES[canal]?.label ?? canal}</span>
-                      <span className="text-gray-500">{count} · {Math.round((count / m.total30d) * 100)}%</span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full ${canalColor[canal] ?? 'bg-gray-400'}`} style={{ width: `${(count / m.total30d) * 100}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <PedidosPorCanal
+              total={m.total30d}
+              filas={m.porCanal.map(([canal, count]) => ({ canal, label: CANALES[canal]?.label ?? canal, count }))}
+            />
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-[#e4e8f0] p-6">
             <h2 className="font-semibold text-gray-900 text-sm mb-3">Estado de los envíos</h2>
-            {m.tracking.total === 0 ? (
-              <p className="text-sm text-gray-400">Aún sin datos de seguimiento</p>
-            ) : (
-              <>
-                <div className="flex h-2.5 rounded-full overflow-hidden bg-gray-100 mb-3">
-                  {m.tracking.entregados > 0 && <div className="bg-green-500" style={{ width: `${(m.tracking.entregados / m.tracking.total) * 100}%` }} />}
-                  {m.tracking.enCurso > 0 && <div className="bg-amber-400" style={{ width: `${(m.tracking.enCurso / m.tracking.total) * 100}%` }} />}
-                  {m.tracking.incidencias > 0 && <div className="bg-red-500" style={{ width: `${(m.tracking.incidencias / m.tracking.total) * 100}%` }} />}
-                </div>
-                <div className="space-y-1.5 text-xs">
-                  <p className="flex items-center gap-2 text-gray-600"><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Entregados <span className="ml-auto font-semibold text-gray-900">{m.tracking.entregados}</span></p>
-                  <p className="flex items-center gap-2 text-gray-600"><Truck className="w-3.5 h-3.5 text-amber-500" /> En curso <span className="ml-auto font-semibold text-gray-900">{m.tracking.enCurso}</span></p>
-                  <p className="flex items-center gap-2 text-gray-600"><AlertTriangle className="w-3.5 h-3.5 text-red-500" /> Incidencias <span className="ml-auto font-semibold text-gray-900">{m.tracking.incidencias}</span></p>
-                </div>
-              </>
-            )}
+            <EstadoEnvios
+              entregados={m.tracking.entregados}
+              enCurso={m.tracking.enCurso}
+              incidencias={m.tracking.incidencias}
+              total={m.tracking.total}
+            />
           </div>
         </div>
       </div>

@@ -39,17 +39,21 @@ export async function getTikTokConfig(): Promise<{
   appKey: string | null
   appSecret: string | null
   redirectUri: string | null
+  serviceId: string | null
   isConfigured: boolean
 }> {
-  const [appKey, appSecret, redirectUri] = await Promise.all([
+  const [appKey, appSecret, redirectUri, serviceId] = await Promise.all([
     getConfig('tiktok_app_key'),
     getConfig('tiktok_app_secret'),
     getConfig('tiktok_redirect_uri'),
+    getConfig('tiktok_service_id'),
   ])
   return {
     appKey,
     appSecret,
     redirectUri,
+    // El Service ID es el que va en la URL de autorización; si no se indica, se usa el App Key
+    serviceId: serviceId || appKey,
     isConfigured: !!(appKey && appSecret && redirectUri),
   }
 }

@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   const state = crypto.randomUUID()
   const consentUrl =
     `https://services.tiktokshop.com/open/authorize` +
-    `?service_id=${cfg.appKey}&state=${state}`
+    `?service_id=${cfg.serviceId ?? cfg.appKey}&state=${state}`
 
   const response = NextResponse.redirect(consentUrl)
   response.cookies.set('tiktok_oauth_state', state, {

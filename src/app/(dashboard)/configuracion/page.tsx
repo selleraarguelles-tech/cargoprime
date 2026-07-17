@@ -25,6 +25,7 @@ export default function ConfiguracionPage() {
     tiktok_app_key: '',
     tiktok_app_secret: '',
     tiktok_redirect_uri: '',
+    tiktok_service_id: '',
     smtp_host: '',
     smtp_port: '465',
     smtp_secure: 'true',
@@ -73,6 +74,7 @@ export default function ConfiguracionPage() {
           tiktok_app_key: data.tiktok_app_key ?? '',
           tiktok_app_secret: data.tiktok_app_secret ?? '',
           tiktok_redirect_uri: data.tiktok_redirect_uri ?? data.tiktok_redirect_uri_suggestion ?? '',
+          tiktok_service_id: data.tiktok_service_id ?? '',
           smtp_host: data.smtp_host ?? '',
           smtp_port: data.smtp_port ?? '465',
           smtp_secure: data.smtp_secure ?? 'true',
@@ -378,6 +380,16 @@ export default function ConfiguracionPage() {
                     {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+              </div>
+              <div>
+                <label className={labelClass}>Service ID <span className="font-normal text-gray-400">(opcional)</span></label>
+                <input
+                  value={form.tiktok_service_id}
+                  onChange={e => setForm(f => ({ ...f, tiktok_service_id: e.target.value }))}
+                  placeholder="Solo si en tu app es distinto del App Key"
+                  className={inputClass}
+                />
+                <p className="text-xs text-gray-400 mt-1">Está en la ficha de tu app del Partner Center. Si lo dejas vacío, se usa el App Key.</p>
               </div>
 
               {error && (

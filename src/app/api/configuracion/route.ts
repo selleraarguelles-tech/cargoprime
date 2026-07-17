@@ -17,7 +17,7 @@ const CTT_KEYS = [
   'ctt_sender_town', 'ctt_sender_country_code', 'ctt_sender_email', 'ctt_sender_phone',
 ]
 
-const TIKTOK_KEYS = ['tiktok_app_key', 'tiktok_app_secret', 'tiktok_redirect_uri']
+const TIKTOK_KEYS = ['tiktok_app_key', 'tiktok_app_secret', 'tiktok_redirect_uri', 'tiktok_service_id']
 
 const EMAIL_KEYS = ['smtp_host', 'smtp_port', 'smtp_secure', 'smtp_user', 'smtp_pass', 'smtp_from']
 

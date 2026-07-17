@@ -32,13 +32,20 @@ export async function GET(req: NextRequest) {
       appSecret: cfg.appSecret,
     })
 
-    const response = NextResponse.redirect(
-      new URL(
-        `/cuentas-tiktok?setup=1&shopId=${encodeURIComponent(shopId)}&shopCipher=${encodeURIComponent(shopCipher)}` +
-        `&nombre=${encodeURIComponent(sellerName)}&accessToken=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}`,
-        req.url
-      )
-    )
+    // Los tokens NO viajan por la URL (historial/logs): se pasan en una cookie
+    // httpOnly de corta vida que solo lee el servidor al pintar la página de setup.
+    const payload = Buffer.from(
+      JSON.stringify({ shopId, shopCipher, nombre: sellerName, accessToken, refreshToken })
+    ).toString('base64')
+
+    const response = NextResponse.redirect(new URL('/cuentas-tiktok?setup=1', req.url))
+    response.cookies.set('tiktok_pending', payload, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 300,
+      path: '/',
+    })
     response.cookies.delete('tiktok_oauth_state')
     return response
   } catch (err: unknown) {

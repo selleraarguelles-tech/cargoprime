@@ -50,7 +50,9 @@ export async function POST(req: NextRequest) {
     const cuenta = await prisma.cuentaTikTok.create({
       data: { nombre, shopId, shopCipher, clienteId: parseInt(clienteId), accessToken, refreshToken },
     })
-    return NextResponse.json({ ok: true, id: cuenta.id })
+    const res = NextResponse.json({ ok: true, id: cuenta.id })
+    res.cookies.delete('tiktok_pending') // ya guardada: limpiamos la cookie de conexión pendiente
+    return res
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[POST /api/tiktok/cuentas]', err)

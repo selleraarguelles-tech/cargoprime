@@ -17,10 +17,13 @@ interface Cuenta {
 
 interface Cliente { id: number; nombre: string }
 
+interface PendingTikTok { shopId: string; shopCipher: string; nombre: string; accessToken: string; refreshToken: string }
+
 interface Props {
   cuentas: Cuenta[]
   clientes: Cliente[]
   configured: boolean
+  pending?: PendingTikTok | null
 }
 
 interface SyncResult {
@@ -33,25 +36,25 @@ interface SyncResult {
 
 const emptyForm = { nombre: '', shopId: '', shopCipher: '', clienteId: '', accessToken: '', refreshToken: '' }
 
-function CuentasTikTokInner({ cuentas: initial, clientes, configured }: Props) {
+function CuentasTikTokInner({ cuentas: initial, clientes, configured, pending }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const errorParam = searchParams.get('error')
   const setupParam = searchParams.get('setup')
 
   const [cuentas, setCuentas] = useState(initial)
-  const [modal, setModal] = useState<'setup' | null>(setupParam === '1' ? 'setup' : null)
+  const [modal, setModal] = useState<'setup' | null>(setupParam === '1' && pending ? 'setup' : null)
   const [loading, setLoading] = useState(false)
   const [syncLoading, setSyncLoading] = useState<number | null>(null)
   const [syncResult, setSyncResult] = useState<{ id: number; result: SyncResult } | null>(null)
   const [error, setError] = useState(errorParam ?? '')
   const [form, setForm] = useState({
     ...emptyForm,
-    shopId: searchParams.get('shopId') ?? '',
-    shopCipher: searchParams.get('shopCipher') ?? '',
-    nombre: searchParams.get('nombre') ?? '',
-    accessToken: searchParams.get('accessToken') ?? '',
-    refreshToken: searchParams.get('refreshToken') ?? '',
+    shopId: pending?.shopId ?? '',
+    shopCipher: pending?.shopCipher ?? '',
+    nombre: pending?.nombre ?? '',
+    accessToken: pending?.accessToken ?? '',
+    refreshToken: pending?.refreshToken ?? '',
   })
 
   function close() {
